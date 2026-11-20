@@ -30,13 +30,13 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
   const today = new Date().toISOString().slice(0, 10)
   const [v, setV] = useState<Record<string, string>>(() => {
     const o: Record<string, string> = {}
-    F[k].forEach(([key, , t, opts]) => {
+    F[k].forEach(([key, , tp, opts]) => {
       let x = awal?.[key]
       if (k === 'saham' && key === 'jumlah') x = awal?.lembar
       if (k === 'saham' && key === 'satuan') x = awal ? 'Lembar' : 'Lot'
       if (key === 'aro' && awal) x = awal.aro ? 'Ya' : 'Tidak'
       if (key === 'hargaManual' && !x) x = ''
-      o[key] = x != null ? String(x) : t === 'date' ? today : key === 'pajak' ? '20' : opts ? opts[0] : ''
+      o[key] = x != null ? String(x) : tp === 'date' ? today : key === 'pajak' ? '20' : opts ? opts[0] : ''
     })
     return o
   })
@@ -51,11 +51,11 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
     }
   }
   const kirim = () => {
-    for (const [key, label, t] of F[k]) {
+    for (const [key, label, tp] of F[k]) {
       const x = (v[key] || '').trim()
-      if (t === 'select') continue
+      if (tp === 'select') continue
       if (!x) { if (key === 'hargaManual' || key === 'lokasi') continue; return setErr(`${t(label)} ${t('wajib diisi')}`) }
-      if (t === 'number') {
+      if (tp === 'number') {
         const n = Number(x)
         if (!isFinite(n) || n < 0) return setErr(`${t(label)} ${t('harus berupa angka positif')}`)
         if (n === 0 && key !== 'bunga' && key !== 'pajak') return setErr(`${t(label)} ${t('harus lebih dari 0')}`)
@@ -63,7 +63,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
     }
     if (k === 'deposito' && (Number(v.pajak) > 100 || !Number.isInteger(Number(v.tenor)))) return setErr(t('Pajak maksimal 100% dan tenor harus bilangan bulat'))
     const o: any = { id: awal?.id || Math.random().toString(36).slice(2) + Date.now().toString(36) }
-    F[k].forEach(([key, , t]) => { o[key] = t === 'number' ? Number(v[key]) : v[key].trim() })
+    F[k].forEach(([key, , tp]) => { o[key] = tp === 'number' ? Number(v[key]) : v[key].trim() })
     if (k === 'saham') { o.lembar = v.satuan === 'Lot' ? o.jumlah * 100 : o.jumlah; o.kode = o.kode.toUpperCase(); delete o.jumlah; delete o.satuan }
     if (k === 'crypto') { o.coinId = o.coinId.toLowerCase(); o.simbol = o.simbol.toUpperCase() }
     if (k === 'deposito') o.aro = v.aro === 'Ya'
@@ -74,10 +74,10 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
       <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 dark:bg-slate-900 sm:rounded-2xl" onClick={e => e.stopPropagation()}>
         <h2 className="mb-4 text-lg font-semibold">{t(awal ? 'Ubah' : 'Tambah')} {t(NAMA[k]).toLowerCase()}</h2>
         <div className="space-y-3">
-          {F[k].map(([key, label, t, opts]) => (
+          {F[k].map(([key, label, tp, opts]) => (
             <label key={key} className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(label)}</span>
-              {t === 'select' ? <select value={v[key]} onChange={e => ubah(key, e.target.value)}>{opts!.map(o => <option key={o} value={o}>{t(o)}</option>)}</select>
-                : <input type={t === 'number' ? 'number' : t} step="any" inputMode={t === 'number' ? 'decimal' : undefined} list={key === 'coinId' ? 'coins' : undefined} value={v[key]} onChange={e => ubah(key, e.target.value)} />}
+              {tp === 'select' ? <select value={v[key]} onChange={e => ubah(key, e.target.value)}>{opts!.map(o => <option key={o} value={o}>{t(o)}</option>)}</select>
+                : <input type={tp === 'number' ? 'number' : tp} step="any" inputMode={tp === 'number' ? 'decimal' : undefined} list={key === 'coinId' ? 'coins' : undefined} value={v[key]} onChange={e => ubah(key, e.target.value)} />}
             </label>
           ))}
           <datalist id="coins">{opsi.map(c => <option key={c.id} value={c.id}>{c.name} ({c.symbol})</option>)}</datalist>
