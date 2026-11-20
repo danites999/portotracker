@@ -1,3 +1,4 @@
+
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis } from 'recharts'
@@ -6,7 +7,7 @@ import { muat, simpan, muatCloud, simpanCloud, kosong, ekspor, impor, contoh } f
 import { sb } from '@/lib/supabase'
 import { tr, Lang } from '@/lib/i18n'
 import { hitung, rp, Baris } from '@/lib/calc'
-
+ 
 const NAMA: Record<Kelas, string> = { saham: 'Saham', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
 const WARNA: Record<Kelas, string> = { saham: '#2563eb', reksa: '#059669', crypto: '#d97706', forex: '#0891b2', emas: '#ca8a04', properti: '#be123c', deposito: '#7c3aed' }
 const KELAS = Object.keys(NAMA) as Kelas[]
@@ -14,7 +15,7 @@ const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-
 const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
 const warna = (n: number) => (n >= 0 ? 'text-emerald-600' : 'text-red-600')
 const jam = (s: string | undefined, t: (x: string) => string) => (s ? new Date(s).toLocaleTimeString(t('id-ID'), { hour: '2-digit', minute: '2-digit' }) : t('belum pernah'))
-
+ 
 type Fld = [string, string, string, string[]?]
 const F: Record<Kelas, Fld[]> = {
   saham: [['kode', 'Kode saham (mis. BBCA)', 'text'], ['jumlah', 'Jumlah', 'number'], ['satuan', 'Satuan', 'select', ['Lot', 'Lembar']], ['hargaBeli', 'Harga beli rata-rata per lembar (Rp)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
@@ -25,7 +26,7 @@ const F: Record<Kelas, Fld[]> = {
   properti: [['nama', 'Nama properti', 'text'], ['jenis', 'Jenis', 'select', ['Tanah', 'Rumah', 'Apartemen', 'Ruko']], ['lokasi', 'Lokasi (opsional)', 'text'], ['hargaBeli', 'Harga beli (Rp)', 'number'], ['nilai', 'Estimasi nilai sekarang (Rp)', 'number'], ['tglNilai', 'Tanggal estimasi nilai', 'date'], ['tanggal', 'Tanggal beli', 'date']],
   deposito: [['bank', 'Bank', 'text'], ['pokok', 'Nominal pokok (Rp)', 'number'], ['bunga', 'Bunga per tahun (%)', 'number'], ['tanggal', 'Tanggal mulai', 'date'], ['tenor', 'Tenor (bulan)', 'number'], ['pajak', 'Pajak bunga (%)', 'number'], ['aro', 'Perpanjang otomatis (ARO)', 'select', ['Tidak', 'Ya']]],
 }
-
+ 
 function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Kelas; awal?: any; onSave: (o: any) => void; onClose: () => void }) {
   const today = new Date().toISOString().slice(0, 10)
   const [v, setV] = useState<Record<string, string>>(() => {
@@ -88,7 +89,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
     </div>
   )
 }
-
+ 
 function Daftar({ rows, M, t, onEdit, onDel }: { t: (s: string) => string; rows: Baris[]; M: (n: number) => string; onEdit: (id: string) => void; onDel: (id: string) => void }) {
   if (!rows.length) return <p className="py-10 text-center text-sm text-slate-500">{t('Belum ada aset di sini. Tekan Tambah untuk memasukkan yang pertama.')}</p>
   const pl = (r: Baris) => r.nilai - r.modal
@@ -126,7 +127,7 @@ function Daftar({ rows, M, t, onEdit, onDel }: { t: (s: string) => string; rows:
     </>
   )
 }
-
+ 
 function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; setLang: (l: Lang) => void }) {
   const [daftar, setDaftar] = useState(false)
   const [email, setEmail] = useState(''), [pw, setPw] = useState('')
@@ -153,7 +154,7 @@ function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; set
     </div>
   )
 }
-
+ 
 export default function Home() {
   const [d, setD] = useState<Data>(kosong())
   const [ok, setOk] = useState(false)
@@ -165,7 +166,7 @@ export default function Home() {
   const [msg, setMsg] = useState('')
   const ref = useRef(d); ref.current = d
   const fileRef = useRef<HTMLInputElement>(null)
-
+ 
   const [lang, setLang] = useState<Lang>('id')
   const [user, setUser] = useState<any>(null)
   const [cek, setCek] = useState(!!sb)
@@ -183,15 +184,15 @@ export default function Home() {
   useEffect(() => {
     if (!sb) return
     setOk(false); setD(kosong())
-    if (uid) muatCloud().then(c => { setD(c || kosong()); setOk(true) }).catch(() => setMsg(t('Gagal membaca file')))
+    if (uid) muatCloud().then(c => { setD(c || kosong()); setOk(true) }).catch((e: any) => { console.error(e); setMsg(`${t('Gagal membaca file')} [${e?.code || ''} ${e?.message || e}]`) })
   }, [uid])
   useEffect(() => {
     if (!ok) return
     if (!sb) { simpan(d); return }
-    const h = setTimeout(() => { if (uid) simpanCloud(uid, d).catch(() => setMsg(t('Gagal menyimpan ke akun. Periksa koneksi.'))) }, 800)
+    const h = setTimeout(() => { if (uid) simpanCloud(uid, d).catch((e: any) => { console.error(e); setMsg(`${t('Gagal menyimpan ke akun. Periksa koneksi.')} [${e?.code || ''} ${e?.message || e}]`) }) }, 800)
     return () => clearTimeout(h)
   }, [d, ok])
-
+ 
   const refresh = useCallback(async () => {
     setLoad(true)
     const cur = ref.current
@@ -212,12 +213,12 @@ export default function Home() {
   }, [])
   useEffect(() => { if (ok) refresh() }, [ok, refresh])
   useEffect(() => { if (!ok || !every) return; const t = setInterval(refresh, every * 60000); return () => clearInterval(t) }, [ok, every, refresh])
-
+ 
   const rows = useMemo(() => hitung(d, t), [d, t])
   const sum = (k: Kelas, f: 'modal' | 'nilai') => rows[k].reduce((a, r) => a + r[f], 0)
   const total = KELAS.reduce((a, k) => a + sum(k, 'nilai'), 0), modal = KELAS.reduce((a, k) => a + sum(k, 'modal'), 0)
   const pl = total - modal
-
+ 
   // Snapshot harian untuk grafik riwayat
   useEffect(() => {
     if (!ok || !total) return
@@ -225,7 +226,7 @@ export default function Home() {
     setD(p => { const l = p.riwayat[p.riwayat.length - 1]; if (l?.t === t && Math.round(l.v) === Math.round(total)) return p
       return { ...p, riwayat: [...(l?.t === t ? p.riwayat.slice(0, -1) : p.riwayat), { t, v: total }].slice(-730) } })
   }, [total, ok])
-
+ 
   const M = (n: number) => (hide ? 'Rp ••••••' : rp(n))
   const simpanAset = (o: any) => { const k = form!.k; setD(p => ({ ...p, [k]: p[k].some(a => a.id === o.id) ? p[k].map(a => (a.id === o.id ? o : a)) : [...p[k], o] })); setForm(null); setTimeout(refresh, 0) }
   const hapus = (k: Kelas) => (id: string) => setD(p => ({ ...p, [k]: p[k].filter(a => a.id !== id) }))
@@ -235,7 +236,7 @@ export default function Home() {
   }
   const donut = KELAS.map(k => ({ k, name: t(NAMA[k]), value: sum(k, 'nilai') })).filter(x => x.value > 0)
   const tabs: ['ringkasan' | Kelas, string][] = [['ringkasan', 'Ringkasan'], ...KELAS.map(k => [k, NAMA[k]] as [Kelas, string])]
-
+ 
   if (sb && cek) return null
   if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} />
   return (
@@ -254,7 +255,7 @@ export default function Home() {
         <nav className="-mb-1 mt-3 flex gap-1 overflow-x-auto">{tabs.map(([k, n]) => <button key={k} onClick={() => setTab(k)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === k ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-600 dark:text-slate-400'}`}>{t(n)}</button>)}</nav>
       </header>
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900">{msg}</p>}
-
+ 
       {tab === 'ringkasan' ? (
         <main className="mt-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -298,3 +299,4 @@ export default function Home() {
     </div>
   )
 }
+ 
