@@ -27,5 +27,5 @@ export const contoh = (): Data => ({ ...kosong(),
   deposito: [{ id: id(), bank: 'Bank Contoh', pokok: 50000000, bunga: 4.5, tanggal: '2026-09-01', tenor: 6, pajak: 20, aro: false }] })
 
 // Mode akun (Supabase): satu baris per pengguna di tabel portfolios, dilindungi RLS.
-export async function muatCloud(): Promise<Data | null> { const { data } = await sb!.from('portfolios').select('data').maybeSingle(); return data ? gabung(data.data) : null }
+export async function muatCloud(): Promise<Data | null> { const { data, error } = await sb!.from('portfolios').select('data').maybeSingle(); if (error) throw error; return data ? gabung(data.data) : null }
 export async function simpanCloud(uid: string, d: Data) { const { error } = await sb!.from('portfolios').upsert({ user_id: uid, data: d, updated_at: new Date().toISOString() }); if (error) throw error }
