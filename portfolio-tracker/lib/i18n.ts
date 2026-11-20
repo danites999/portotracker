@@ -1,0 +1,33 @@
+export type Lang = 'id' | 'en'
+// Kunci = teks Indonesia, nilai = teks Inggris. Teks yang tidak ada di sini tampil apa adanya.
+const en: Record<string, string> = {
+  'id-ID': 'en-US', Batal: 'Cancel', Simpan: 'Save', Ubah: 'Edit', Hapus: 'Delete', Tambah: 'Add', Keluar: 'Sign out', Masuk: 'Sign in', Daftar: 'Sign up', 'Kata sandi': 'Password',
+  'Belum ada aset di sini. Tekan Tambah untuk memasukkan yang pertama.': 'No assets here yet. Press Add to enter your first one.', 'Hapus aset ini?': 'Delete this asset?',
+  Aset: 'Asset', 'Harga beli': 'Buy price', 'Harga kini': 'Current price', Modal: 'Cost', Nilai: 'Value', 'Untung/rugi': 'Profit/loss', Beli: 'Buy', Kini: 'Now', 'Estimasi saat jatuh tempo': 'Estimated at maturity',
+  'wajib diisi': 'is required', 'harus berupa angka positif': 'must be a positive number', 'harus lebih dari 0': 'must be greater than 0', 'Pajak maksimal 100% dan tenor harus bilangan bulat': 'Tax is at most 100% and tenor must be a whole number',
+  'Gagal mengambil harga': 'Failed to fetch prices', 'Memakai harga terakhir yang tersimpan.': 'Using the last saved prices.', 'Gagal menyimpan ke akun. Periksa koneksi.': 'Failed to save to your account. Check your connection.',
+  'Tampilkan nominal': 'Show amounts', 'Sembunyikan nominal': 'Hide amounts', 'Auto-refresh mati': 'Auto-refresh off', 'Tiap 1 menit': 'Every 1 min', 'Tiap 5 menit': 'Every 5 min', 'Tiap 15 menit': 'Every 15 min', 'Memuat…': 'Loading…', 'Refresh sekarang': 'Refresh now',
+  Ringkasan: 'Summary', 'Total nilai': 'Total value', 'Total modal': 'Total cost', 'Alokasi aset': 'Asset allocation', 'Belum ada data. Tambahkan aset atau muat data contoh di bawah.': 'No data yet. Add an asset or load sample data below.',
+  'Riwayat nilai total': 'Total value history', 'Grafik muncul setelah aplikasi dibuka di lebih dari satu hari.': 'The chart appears after the app has been opened on more than one day.', 'Per kelas aset': 'By asset class',
+  'harga diperbarui': 'prices updated', 'tertunda ±10-15 menit': 'delayed ±10-15 min', 'kurs diperbarui': 'rates updated', 'belum pernah': 'never', 'NAV manual': 'manual NAV', 'dihitung harian': 'calculated daily',
+  'harga emas dunia, bisa beda dari harga toko': 'world gold price, may differ from shop prices', 'estimasi manual': 'manual estimate',
+  'Data dan backup': 'Data and backup', 'Ekspor JSON': 'Export JSON', 'Impor JSON': 'Import JSON', 'Muat data contoh': 'Load sample data', 'Hapus semua data': 'Delete all data',
+  'Ganti semua data dengan data contoh?': 'Replace all data with sample data?', 'Hapus semua data portofolio? Ekspor dulu jika perlu.': 'Delete all portfolio data? Export first if needed.', 'Gagal membaca file': 'Could not read file',
+  'Data tersimpan di akunmu. Ekspor JSON tetap berguna sebagai cadangan.': 'Data is saved to your account. JSON export is still useful as a backup.', 'Data tersimpan hanya di browser ini. Ekspor secara berkala sebagai cadangan.': 'Data is stored only in this browser. Export regularly as a backup.',
+  'Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.': 'Prices are not investment advice and may be delayed. Stocks ±10-15 min, fund NAV updates daily only.',
+  Saham: 'Stocks', Reksadana: 'Mutual funds', Forex: 'Forex', Emas: 'Gold', Properti: 'Property', Deposito: 'Time deposit',
+  'Pasar uang': 'Money market', Obligasi: 'Bonds', Campuran: 'Mixed', 'Emas batangan': 'Gold bar', Perhiasan: 'Jewelry', 'Emas digital': 'Digital gold', Tanah: 'Land', Rumah: 'House', Apartemen: 'Apartment', Ruko: 'Shophouse', Lembar: 'Shares', Tidak: 'No', Ya: 'Yes',
+  'Kode saham (mis. BBCA)': 'Stock code (e.g. BBCA)', Jumlah: 'Amount', Satuan: 'Unit', 'Harga beli rata-rata per lembar (Rp)': 'Average buy price per share (Rp)', 'Tanggal beli': 'Purchase date', 'Nama produk': 'Product name', Jenis: 'Type',
+  'Jumlah unit': 'Units held', 'NAV beli per unit (Rp)': 'Buy NAV per unit (Rp)', 'NAV terbaru (Rp)': 'Latest NAV (Rp)', 'Tanggal NAV terbaru': 'Latest NAV date', 'ID coin CoinGecko (mis. bitcoin)': 'CoinGecko coin ID (e.g. bitcoin)',
+  'Simbol (mis. BTC)': 'Symbol (e.g. BTC)', 'Jumlah koin': 'Coin amount', 'Harga beli rata-rata per koin': 'Average buy price per coin', 'Mata uang harga beli': 'Buy price currency', 'Mata uang': 'Currency',
+  'Jumlah (dalam mata uang asing)': 'Amount (in foreign currency)', 'Kurs beli rata-rata (Rp per 1 unit)': 'Average buy rate (Rp per 1 unit)', 'Nominal pokok (Rp)': 'Principal (Rp)', 'Bunga per tahun (%)': 'Interest per year (%)',
+  'Tanggal mulai': 'Start date', 'Tenor (bulan)': 'Tenor (months)', 'Pajak bunga (%)': 'Interest tax (%)', 'Perpanjang otomatis (ARO)': 'Auto roll-over (ARO)',
+  'Jumlah (gram)': 'Amount (grams)', 'Harga beli per gram (Rp)': 'Buy price per gram (Rp)', 'Harga jual sekarang per gram (opsional)': 'Current price per gram (optional)', 'Nama properti': 'Property name', 'Lokasi (opsional)': 'Location (optional)',
+  'Harga beli (Rp)': 'Purchase price (Rp)', 'Estimasi nilai sekarang (Rp)': 'Current estimated value (Rp)', 'Tanggal estimasi nilai': 'Valuation date',
+  lembar: 'shares', koin: 'coins', unit: 'units', 'NAV diperbarui': 'NAV updated', 'hari lalu': 'days ago', 'perlu diperbarui': 'needs update', 'Harga belum tersedia, nilai memakai modal': 'Price unavailable, value uses cost',
+  'Kurs belum tersedia, nilai memakai modal': 'Rate unavailable, value uses cost', 'Harga manual': 'Manual price', 'Harga emas dunia per gram, bisa berbeda dari harga toko/Antam': 'World gold price per gram, may differ from shop/Antam prices',
+  'Estimasi nilai diperbarui': 'Estimate updated', 'Jatuh tempo': 'Matures', 'hari lagi': 'days left', 'Nilai = pokok + bunga bersih berjalan': 'Value = principal + net accrued interest', '/thn': '/yr', bln: 'mo',
+  'Belum punya akun? Daftar': 'No account yet? Sign up', 'Sudah punya akun? Masuk': 'Already have an account? Sign in', 'Cek email kamu untuk konfirmasi, lalu masuk.': 'Check your email to confirm, then sign in.',
+  'Kata sandi minimal 6 karakter': 'Password must be at least 6 characters', 'Data portofolio tersimpan di akunmu dan sinkron di semua perangkat.': 'Your portfolio is saved to your account and syncs across devices.',
+}
+export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
