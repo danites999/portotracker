@@ -38,5 +38,17 @@ const en: Record<string, string> = {
   'Aset tanpa data harga historis dihitung sebesar modal.': 'Assets without historical price data are valued at cost.',
   'Username wajib diisi': 'Username is required', 'Username 3-20 karakter: huruf kecil, angka, titik, atau garis bawah': 'Username: 3-20 characters, lowercase letters, numbers, dots or underscores', 'Username atau kata sandi salah': 'Wrong username or password', 'Username sudah dipakai': 'Username is already taken',
   'Akun dibuat, tetapi konfirmasi email masih aktif di Supabase. Matikan "Confirm email" agar login dengan username bisa dipakai.': 'Account created, but email confirmation is still on in Supabase. Turn off "Confirm email" so username login works.',
+  'Buka aplikasi': 'Open app', 'Daftar gratis': 'Sign up free', 'Semua investasimu, satu layar.': 'All your investments, one screen.',
+  'Pantau saham, reksadana, crypto, forex, emas, properti, dan deposito. Harga terbarunya dalam rupiah, untung rugi dihitung otomatis.': 'Track stocks, mutual funds, crypto, forex, gold, property and time deposits. Latest prices in rupiah, profit and loss calculated for you.',
+  'Data tersimpan di browser ini.': 'Data is saved in this browser.', 'Tanpa email. Cukup username dan kata sandi.': 'No email needed. Just a username and password.', 'Contoh tampilan': 'Sample view', 'Hari ini': 'Today',
+  'Satu total dari tujuh jenis aset': 'One total from seven asset types', Crypto: 'Crypto', 'Dari tanggal beli sampai harga hari ini': 'From purchase date to today\'s price',
+  'Ringkasan tiap aset': 'Summary of each asset', 'Lihat harga beli, harga hari ini, untung rugi, dan grafik pergerakannya sejak hari pertama kamu membeli.': 'See buy price, today\'s price, profit and loss, and a chart of its movement since the day you bought.',
+  'Berita hari ini di sebelahnya': 'Today\'s news alongside', 'Setiap kelas aset punya panel berita terbaru. Buka satu aset, beritanya ikut menyesuaikan.': 'Every asset class has a latest-news panel. Open an asset and the news follows.',
+  'Harga diperbarui otomatis': 'Prices update automatically', 'Saham IDX, crypto, kurs, dan emas dunia dalam rupiah. Harga saham tertunda sekitar 10-15 menit.': 'IDX stocks, crypto, exchange rates and world gold in rupiah. Stock prices are delayed about 10-15 minutes.',
+  'Riwayat total nilai': 'Total value history', 'Grafik total portofolio dihitung dari tanggal beli tiap aset, jadi langsung terisi sejak hari pertama.': 'The total portfolio chart is built from each asset\'s purchase date, so it is filled from day one.',
+  'Privat dan sinkron': 'Private and synced', 'Masuk dengan username, tanpa email. Data tersimpan di akunmu dan bisa dibuka dari HP maupun laptop. Nominal bisa disembunyikan dengan satu tombol.': 'Sign in with a username, no email. Your data is saved to your account and opens on phone or laptop. Hide amounts with one button.',
+  'Mulai catat investasi pertamamu hari ini.': 'Start recording your first investment today.', 'Harga bukan saran investasi dan bisa tertunda.': 'Prices are not investment advice and may be delayed.',
+  'Kembali ke beranda': 'Back to home', 'Buat akun': 'Create account', 'Portofoliomu, di mana pun kamu buka.': 'Your portfolio, wherever you open it.',
+  'Masuk untuk melihat portofoliomu.': 'Sign in to see your portfolio.', 'Pilih username dan kata sandi untuk akun barumu.': 'Choose a username and password for your new account.',
 }
 export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
