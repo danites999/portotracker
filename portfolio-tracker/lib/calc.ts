@@ -10,7 +10,7 @@ export function hitung(d: Data, t: (s: string) => string = s => s) {
   const reksa: Baris[] = d.reksa.map(a => { const u = hari(a.tglNav)
     return { id: a.id, nama: a.nama, sub: `${t(a.jenis)}, ${a.unit} ${t('unit')}`, modal: a.unit * a.navBeli, nilai: a.unit * a.navTerbaru, beli: a.navBeli, kini: a.navTerbaru, info: `${t('NAV diperbarui')} ${u} ${t('hari lalu')}` + (u > 7 ? `, ${t('perlu diperbarui')}` : ''), warn: u > 7 } })
   const crypto: Baris[] = d.crypto.map(a => { const p = h.crypto[a.coinId], bi = a.mata === 'USD' ? a.hargaBeli * h.kurs : a.hargaBeli, modal = a.jumlah * bi
-    return { id: a.id, nama: a.simbol, sub: `${a.jumlah} ${t('koin')}`, modal, nilai: p ? a.jumlah * p : modal, beli: bi, kini: p, info: p ? undefined : nol, warn: !p } })
+    return { id: a.id, nama: a.simbol, sub: `${a.jumlah.toLocaleString(t('id-ID'), { maximumFractionDigits: 8 })} ${t('koin')}`, modal, nilai: p ? a.jumlah * p : modal, beli: bi, kini: p, info: p ? undefined : nol, warn: !p } })
   const forex: Baris[] = (d.forex || []).map(a => { const p = (h.forex || {})[a.mata], modal = a.jumlah * a.kursBeli
     return { id: a.id, nama: a.mata, sub: `${a.jumlah.toLocaleString(t('id-ID'))} ${a.mata}`, modal, nilai: p ? a.jumlah * p : modal, beli: a.kursBeli, kini: p, info: p ? undefined : t('Kurs belum tersedia, nilai memakai modal'), warn: !p } })
   const emas: Baris[] = (d.emas || []).map(a => { const man = a.hargaManual > 0, p = man ? a.hargaManual : h.emas, modal = a.gram * a.hargaBeli
