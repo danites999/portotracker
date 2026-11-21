@@ -1,7 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body { @apply bg-stone-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+body { @apply bg-stone-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100; font-family: var(--font-jakarta), system-ui, -apple-system, 'Segoe UI', sans-serif; }
 input, select { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900; }
 .btn { @apply rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700; }
 .btn-p { @apply rounded-lg bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white; }
+
+/* Garis grafik pada halaman awal digambar sekali saat halaman dibuka */
+.garis-gambar { stroke-dasharray: 1; stroke-dashoffset: 1; animation: gambar-garis 1.8s cubic-bezier(.4, 0, .2, 1) .3s forwards; }
+@keyframes gambar-garis { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .garis-gambar { animation: none; stroke-dashoffset: 0; } }
