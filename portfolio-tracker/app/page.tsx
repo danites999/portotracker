@@ -6,6 +6,7 @@ import { muat, simpan, muatCloud, simpanCloud, kosong, ekspor, impor, contoh } f
 import { sb } from '@/lib/supabase'
 import { tr, Lang } from '@/lib/i18n'
 import { hitung, rp, Baris } from '@/lib/calc'
+import { Awal, Logo, T } from './Awal'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
 
 const NAMA: Record<Kelas, string> = { saham: 'Saham', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
@@ -225,8 +226,8 @@ function Daftar({ rows, M, t, onEdit, onDel, fokus, onFokus }: { t: (s: string) 
   )
 }
 
-function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; setLang: (l: Lang) => void }) {
-  const [daftar, setDaftar] = useState(false)
+function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => string; lang: Lang; setLang: (l: Lang) => void; daftarAwal: boolean; onKembali: () => void }) {
+  const [daftar, setDaftar] = useState(daftarAwal)
   const [nama, setNama] = useState(''), [pw, setPw] = useState('')
   const [err, setErr] = useState(''), [info, setInfo] = useState(''), [busy, setBusy] = useState(false)
   const kirim = async () => {
@@ -245,16 +246,34 @@ function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; set
     setBusy(false)
   }
   return (
-    <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-3 px-4">
-      <div className="flex items-center justify-between"><h1 className="text-xl font-semibold">Portfolio Tracker</h1>
-        <select className="!w-auto" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label="Language"><option value="id">Indonesia</option><option value="en">English</option></select></div>
-      <p className="text-sm text-slate-500">{t('Data portofolio tersimpan di akunmu dan sinkron di semua perangkat.')}</p>
-      <input type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" placeholder="Username" value={nama} onChange={e => setNama(e.target.value)} />
-      <input type="password" autoComplete={daftar ? 'new-password' : 'current-password'} placeholder={t('Kata sandi')} value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && kirim()} />
-      {err && <p className="text-sm text-red-600">{err}</p>}{info && <p className="text-sm text-emerald-700">{info}</p>}
-      <button className="btn-p" disabled={busy} onClick={kirim}>{daftar ? t('Daftar') : t('Masuk')}</button>
-      <button className="text-sm text-blue-600" onClick={() => { setDaftar(!daftar); setErr(''); setInfo('') }}>{daftar ? t('Sudah punya akun? Masuk') : t('Belum punya akun? Daftar')}</button>
-      <p className="mt-4 text-center text-xs text-slate-500">Portfolio Tracker™ · {KREDIT}</p>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="hidden flex-col justify-between p-12 lg:flex" style={{ background: T.bg, color: T.teks }}>
+        <Logo besar />
+        <div>
+          <h2 className="max-w-md text-4xl font-extrabold leading-tight tracking-tight">{t('Portofoliomu, di mana pun kamu buka.')}</h2>
+          <p className="mt-4 max-w-md text-lg leading-relaxed" style={{ color: T.redup }}>{t('Data portofolio tersimpan di akunmu dan sinkron di semua perangkat.')}</p>
+        </div>
+        <p className="text-xs" style={{ color: T.redup }}>Created by Dani</p>
+      </div>
+      <div className="flex flex-col justify-center px-6 py-10">
+        <div className="mx-auto w-full max-w-sm space-y-3">
+          <div className="mb-4 flex items-center justify-between">
+            <button className="text-sm text-slate-500 hover:underline" onClick={onKembali}>{t('Kembali ke beranda')}</button>
+            <select className="!w-auto" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label="Language"><option value="id">Indonesia</option><option value="en">English</option></select>
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight">{daftar ? t('Buat akun') : t('Masuk')}</h1>
+          <p className="pb-2 text-sm text-slate-500">{daftar ? t('Pilih username dan kata sandi untuk akun barumu.') : t('Masuk untuk melihat portofoliomu.')}</p>
+          <label className="block text-sm font-medium" htmlFor="username">Username</label>
+          <input id="username" type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false} autoComplete="username" value={nama} onChange={e => setNama(e.target.value)} />
+          {daftar && <p className="text-xs text-slate-500">{t('Username 3-20 karakter: huruf kecil, angka, titik, atau garis bawah')}</p>}
+          <label className="block text-sm font-medium" htmlFor="sandi">{t('Kata sandi')}</label>
+          <input id="sandi" type="password" autoComplete={daftar ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && kirim()} />
+          {err && <p className="text-sm text-red-600" role="alert">{err}</p>}{info && <p className="text-sm text-emerald-700">{info}</p>}
+          <button className="btn-p w-full !py-2.5" disabled={busy} onClick={kirim}>{daftar ? t('Daftar') : t('Masuk')}</button>
+          <button className="w-full text-sm text-blue-600" onClick={() => { setDaftar(!daftar); setErr(''); setInfo('') }}>{daftar ? t('Sudah punya akun? Masuk') : t('Belum punya akun? Daftar')}</button>
+          <p className="pt-4 text-center text-xs text-slate-500">Portfolio Tracker™ · {KREDIT}</p>
+        </div>
+      </div>
     </div>
   )
 }
@@ -264,6 +283,8 @@ export default function Home() {
   const [ok, setOk] = useState(false)
   const [tab, setTab] = useState<'ringkasan' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
+  const [layar, setLayar] = useState<'awal' | 'masuk'>('awal')
+  const [daftarAwal, setDaftarAwal] = useState(false)
   const [fokus, setFokus] = useState<string | null>(null)
   const [cache, setCache] = useState<Cache>({})
   const sedang = useRef(new Set<string>())
@@ -381,7 +402,8 @@ export default function Home() {
   const fBaris = tab !== 'ringkasan' && fAset ? rows[tab].find(r => r.id === fAset.id) : undefined
 
   if (sb && cek) return null
-  if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} />
+  if ((!sb || !user) && layar === 'awal') return <Awal t={t} lang={lang} setLang={pilihBahasa} lokal={!sb} onMasuk={() => { setDaftarAwal(false); setLayar('masuk') }} onDaftar={() => { setDaftarAwal(true); setLayar('masuk') }} />
+  if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} daftarAwal={daftarAwal} onKembali={() => setLayar('awal')} />
   return (
     <div className="mx-auto max-w-6xl px-4 pb-10">
       <header className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-stone-50/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
@@ -393,7 +415,7 @@ export default function Home() {
             <select className="!w-auto" value={every} onChange={e => setEvery(Number(e.target.value))} aria-label="Auto-refresh"><option value={0}>{t('Auto-refresh mati')}</option><option value={1}>{t('Tiap 1 menit')}</option><option value={5}>{t('Tiap 5 menit')}</option><option value={15}>{t('Tiap 15 menit')}</option></select>
             <button className="btn-p" onClick={refresh} disabled={load}>{load ? t('Memuat…') : t('Refresh sekarang')}</button>
             {sb && namaDari(user?.email) && <span className="text-sm text-slate-500">@{namaDari(user.email)}</span>}
-            {sb && <button className="btn" onClick={() => sb.auth.signOut()}>{t('Keluar')}</button>}
+            {sb && <button className="btn" onClick={() => { sb.auth.signOut(); setLayar('awal') }}>{t('Keluar')}</button>}
           </div>
         </div>
         <nav className="mt-3 flex flex-wrap items-center gap-2">
