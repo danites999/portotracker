@@ -29,5 +29,14 @@ const en: Record<string, string> = {
   'Estimasi nilai diperbarui': 'Estimate updated', 'Jatuh tempo': 'Matures', 'hari lagi': 'days left', 'Nilai = pokok + bunga bersih berjalan': 'Value = principal + net accrued interest', '/thn': '/yr', bln: 'mo',
   'Belum punya akun? Daftar': 'No account yet? Sign up', 'Sudah punya akun? Masuk': 'Already have an account? Sign in', 'Cek email kamu untuk konfirmasi, lalu masuk.': 'Check your email to confirm, then sign in.',
   'Kata sandi minimal 6 karakter': 'Password must be at least 6 characters', 'Data portofolio tersimpan di akunmu dan sinkron di semua perangkat.': 'Your portfolio is saved to your account and syncs across devices.',
+  'Ringkasan total': 'Total summary', Investasi: 'Investments', Tutup: 'Close', 'Berita hari ini': "Today's news", 'Memuat berita…': 'Loading news…', 'Berita gagal dimuat. Coba lagi nanti.': 'Failed to load news. Try again later.',
+  'Belum ada berita untuk topik ini.': 'No news for this topic yet.', 'Belum ada berita 24 jam terakhir, menampilkan 7 hari terakhir.': 'No news in the last 24 hours, showing the last 7 days.', 'berita umum': 'general news', 'menit lalu': 'min ago', 'jam lalu': 'h ago',
+  'Harga hari ini': 'Price today', 'Perubahan harga': 'Price change', 'Nilai sekarang': 'Current value', 'Tertinggi sejak beli': 'Highest since purchase', 'Terendah sejak beli': 'Lowest since purchase', hari: 'days',
+  'Memuat riwayat harga…': 'Loading price history…', 'Riwayat harga tidak tersedia (sumber data gagal). Tekan Refresh untuk mencoba lagi.': 'Price history unavailable (data source failed). Press Refresh to try again.',
+  'Belum cukup data untuk grafik.': 'Not enough data for a chart yet.', 'Harga per satuan sejak tanggal beli': 'Price per unit since purchase date', 'Nilai sejak tanggal beli': 'Value since purchase date', 'Garis putus-putus = harga beli': 'Dashed line = buy price',
+  'Data harga crypto gratis hanya mencakup 365 hari terakhir.': 'Free crypto price data only covers the last 365 days.', 'Dihitung dari tanggal beli tiap aset memakai harga historis.': 'Calculated from each asset\'s purchase date using historical prices.',
+  'Aset tanpa data harga historis dihitung sebesar modal.': 'Assets without historical price data are valued at cost.',
+  'Username wajib diisi': 'Username is required', 'Username 3-20 karakter: huruf kecil, angka, titik, atau garis bawah': 'Username: 3-20 characters, lowercase letters, numbers, dots or underscores', 'Username atau kata sandi salah': 'Wrong username or password', 'Username sudah dipakai': 'Username is already taken',
+  'Akun dibuat, tetapi konfirmasi email masih aktif di Supabase. Matikan "Confirm email" agar login dengan username bisa dipakai.': 'Account created, but email confirmation is still on in Supabase. Turn off "Confirm email" so username login works.',
 }
 export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
