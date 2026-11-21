@@ -1,4 +1,3 @@
-
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis } from 'recharts'
@@ -7,7 +6,7 @@ import { muat, simpan, muatCloud, simpanCloud, kosong, ekspor, impor, contoh } f
 import { sb } from '@/lib/supabase'
 import { tr, Lang } from '@/lib/i18n'
 import { hitung, rp, Baris } from '@/lib/calc'
- 
+
 const NAMA: Record<Kelas, string> = { saham: 'Saham', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
 const WARNA: Record<Kelas, string> = { saham: '#2563eb', reksa: '#059669', crypto: '#d97706', forex: '#0891b2', emas: '#ca8a04', properti: '#be123c', deposito: '#7c3aed' }
 const KELAS = Object.keys(NAMA) as Kelas[]
@@ -15,18 +14,18 @@ const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-
 const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
 const warna = (n: number) => (n >= 0 ? 'text-emerald-600' : 'text-red-600')
 const jam = (s: string | undefined, t: (x: string) => string) => (s ? new Date(s).toLocaleTimeString(t('id-ID'), { hour: '2-digit', minute: '2-digit' }) : t('belum pernah'))
- 
+
 type Fld = [string, string, string, string[]?]
 const F: Record<Kelas, Fld[]> = {
   saham: [['kode', 'Kode saham (mis. BBCA)', 'text'], ['jumlah', 'Jumlah', 'number'], ['satuan', 'Satuan', 'select', ['Lot', 'Lembar']], ['hargaBeli', 'Harga beli rata-rata per lembar (Rp)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
   reksa: [['nama', 'Nama produk', 'text'], ['jenis', 'Jenis', 'select', ['Pasar uang', 'Obligasi', 'Campuran', 'Saham']], ['unit', 'Jumlah unit', 'number'], ['navBeli', 'NAV beli per unit (Rp)', 'number'], ['tanggal', 'Tanggal beli', 'date'], ['navTerbaru', 'NAV terbaru (Rp)', 'number'], ['tglNav', 'Tanggal NAV terbaru', 'date']],
-  crypto: [['coinId', 'ID coin CoinGecko (mis. bitcoin)', 'text'], ['simbol', 'Simbol (mis. BTC)', 'text'], ['jumlah', 'Jumlah koin', 'number'], ['hargaBeli', 'Harga beli rata-rata per koin', 'number'], ['mata', 'Mata uang harga beli', 'select', ['IDR', 'USD']], ['tanggal', 'Tanggal beli', 'date']],
+  crypto: [['coinId', 'ID coin CoinGecko (mis. bitcoin)', 'text'], ['simbol', 'Simbol (mis. BTC)', 'text'], ['jumlah', 'Jumlah koin', 'desimal'], ['hargaBeli', 'Harga beli rata-rata per koin', 'number'], ['mata', 'Mata uang harga beli', 'select', ['IDR', 'USD']], ['tanggal', 'Tanggal beli', 'date']],
   forex: [['mata', 'Mata uang', 'select', ['USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'MYR', 'CNY', 'HKD', 'SAR']], ['jumlah', 'Jumlah (dalam mata uang asing)', 'number'], ['kursBeli', 'Kurs beli rata-rata (Rp per 1 unit)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
   emas: [['jenis', 'Jenis', 'select', ['Emas batangan', 'Perhiasan', 'Emas digital']], ['gram', 'Jumlah (gram)', 'number'], ['hargaBeli', 'Harga beli per gram (Rp)', 'number'], ['hargaManual', 'Harga jual sekarang per gram (opsional)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
   properti: [['nama', 'Nama properti', 'text'], ['jenis', 'Jenis', 'select', ['Tanah', 'Rumah', 'Apartemen', 'Ruko']], ['lokasi', 'Lokasi (opsional)', 'text'], ['hargaBeli', 'Harga beli (Rp)', 'number'], ['nilai', 'Estimasi nilai sekarang (Rp)', 'number'], ['tglNilai', 'Tanggal estimasi nilai', 'date'], ['tanggal', 'Tanggal beli', 'date']],
   deposito: [['bank', 'Bank', 'text'], ['pokok', 'Nominal pokok (Rp)', 'number'], ['bunga', 'Bunga per tahun (%)', 'number'], ['tanggal', 'Tanggal mulai', 'date'], ['tenor', 'Tenor (bulan)', 'number'], ['pajak', 'Pajak bunga (%)', 'number'], ['aro', 'Perpanjang otomatis (ARO)', 'select', ['Tidak', 'Ya']]],
 }
- 
+
 function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Kelas; awal?: any; onSave: (o: any) => void; onClose: () => void }) {
   const today = new Date().toISOString().slice(0, 10)
   const [v, setV] = useState<Record<string, string>>(() => {
@@ -37,7 +36,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
       if (k === 'saham' && key === 'satuan') x = awal ? 'Lembar' : 'Lot'
       if (key === 'aro' && awal) x = awal.aro ? 'Ya' : 'Tidak'
       if (key === 'hargaManual' && !x) x = ''
-      o[key] = x != null ? String(x) : tp === 'date' ? today : key === 'pajak' ? '20' : opts ? opts[0] : ''
+      o[key] = x != null ? (tp === 'desimal' ? Number(x).toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 12 }) : String(x)) : tp === 'date' ? today : key === 'pajak' ? '20' : opts ? opts[0] : ''
     })
     return o
   })
@@ -56,15 +55,15 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
       const x = (v[key] || '').trim()
       if (tp === 'select') continue
       if (!x) { if (key === 'hargaManual' || key === 'lokasi') continue; return setErr(`${t(label)} ${t('wajib diisi')}`) }
-      if (tp === 'number') {
-        const n = Number(x)
+      if (tp === 'number' || tp === 'desimal') {
+        const n = Number(x.replace(',', '.'))
         if (!isFinite(n) || n < 0) return setErr(`${t(label)} ${t('harus berupa angka positif')}`)
         if (n === 0 && key !== 'bunga' && key !== 'pajak') return setErr(`${t(label)} ${t('harus lebih dari 0')}`)
       }
     }
     if (k === 'deposito' && (Number(v.pajak) > 100 || !Number.isInteger(Number(v.tenor)))) return setErr(t('Pajak maksimal 100% dan tenor harus bilangan bulat'))
     const o: any = { id: awal?.id || Math.random().toString(36).slice(2) + Date.now().toString(36) }
-    F[k].forEach(([key, , tp]) => { o[key] = tp === 'number' ? Number(v[key]) : v[key].trim() })
+    F[k].forEach(([key, , tp]) => { o[key] = tp === 'number' ? Number(v[key]) : tp === 'desimal' ? Number(v[key].trim().replace(',', '.')) : v[key].trim() })
     if (k === 'saham') { o.lembar = v.satuan === 'Lot' ? o.jumlah * 100 : o.jumlah; o.kode = o.kode.toUpperCase(); delete o.jumlah; delete o.satuan }
     if (k === 'crypto') { o.coinId = o.coinId.toLowerCase(); o.simbol = o.simbol.toUpperCase() }
     if (k === 'deposito') o.aro = v.aro === 'Ya'
@@ -78,7 +77,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
           {F[k].map(([key, label, tp, opts]) => (
             <label key={key} className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(label)}</span>
               {tp === 'select' ? <select value={v[key]} onChange={e => ubah(key, e.target.value)}>{opts!.map(o => <option key={o} value={o}>{t(o)}</option>)}</select>
-                : <input type={tp === 'number' ? 'number' : tp} step="any" inputMode={tp === 'number' ? 'decimal' : undefined} list={key === 'coinId' ? 'coins' : undefined} value={v[key]} onChange={e => ubah(key, e.target.value)} />}
+                : <input type={tp === 'number' ? 'number' : tp === 'desimal' ? 'text' : tp} step="any" inputMode={tp === 'number' || tp === 'desimal' ? 'decimal' : undefined} placeholder={tp === 'desimal' ? '0.5' : undefined} list={key === 'coinId' ? 'coins' : undefined} value={v[key]} onChange={e => ubah(key, tp === 'desimal' ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />}
             </label>
           ))}
           <datalist id="coins">{opsi.map(c => <option key={c.id} value={c.id}>{c.name} ({c.symbol})</option>)}</datalist>
@@ -89,7 +88,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
     </div>
   )
 }
- 
+
 function Daftar({ rows, M, t, onEdit, onDel }: { t: (s: string) => string; rows: Baris[]; M: (n: number) => string; onEdit: (id: string) => void; onDel: (id: string) => void }) {
   if (!rows.length) return <p className="py-10 text-center text-sm text-slate-500">{t('Belum ada aset di sini. Tekan Tambah untuk memasukkan yang pertama.')}</p>
   const pl = (r: Baris) => r.nilai - r.modal
@@ -127,7 +126,7 @@ function Daftar({ rows, M, t, onEdit, onDel }: { t: (s: string) => string; rows:
     </>
   )
 }
- 
+
 function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; setLang: (l: Lang) => void }) {
   const [daftar, setDaftar] = useState(false)
   const [email, setEmail] = useState(''), [pw, setPw] = useState('')
@@ -154,7 +153,7 @@ function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; set
     </div>
   )
 }
- 
+
 export default function Home() {
   const [d, setD] = useState<Data>(kosong())
   const [ok, setOk] = useState(false)
@@ -166,7 +165,7 @@ export default function Home() {
   const [msg, setMsg] = useState('')
   const ref = useRef(d); ref.current = d
   const fileRef = useRef<HTMLInputElement>(null)
- 
+
   const [lang, setLang] = useState<Lang>('id')
   const [user, setUser] = useState<any>(null)
   const [cek, setCek] = useState(!!sb)
@@ -192,7 +191,7 @@ export default function Home() {
     const h = setTimeout(() => { if (uid) simpanCloud(uid, d).catch((e: any) => { console.error(e); setMsg(`${t('Gagal menyimpan ke akun. Periksa koneksi.')} [${e?.code || ''} ${e?.message || e}]`) }) }, 800)
     return () => clearTimeout(h)
   }, [d, ok])
- 
+
   const refresh = useCallback(async () => {
     setLoad(true)
     const cur = ref.current
@@ -213,12 +212,12 @@ export default function Home() {
   }, [])
   useEffect(() => { if (ok) refresh() }, [ok, refresh])
   useEffect(() => { if (!ok || !every) return; const t = setInterval(refresh, every * 60000); return () => clearInterval(t) }, [ok, every, refresh])
- 
+
   const rows = useMemo(() => hitung(d, t), [d, t])
   const sum = (k: Kelas, f: 'modal' | 'nilai') => rows[k].reduce((a, r) => a + r[f], 0)
   const total = KELAS.reduce((a, k) => a + sum(k, 'nilai'), 0), modal = KELAS.reduce((a, k) => a + sum(k, 'modal'), 0)
   const pl = total - modal
- 
+
   // Snapshot harian untuk grafik riwayat
   useEffect(() => {
     if (!ok || !total) return
@@ -226,7 +225,7 @@ export default function Home() {
     setD(p => { const l = p.riwayat[p.riwayat.length - 1]; if (l?.t === t && Math.round(l.v) === Math.round(total)) return p
       return { ...p, riwayat: [...(l?.t === t ? p.riwayat.slice(0, -1) : p.riwayat), { t, v: total }].slice(-730) } })
   }, [total, ok])
- 
+
   const M = (n: number) => (hide ? 'Rp ••••••' : rp(n))
   const simpanAset = (o: any) => { const k = form!.k; setD(p => ({ ...p, [k]: p[k].some(a => a.id === o.id) ? p[k].map(a => (a.id === o.id ? o : a)) : [...p[k], o] })); setForm(null); setTimeout(refresh, 0) }
   const hapus = (k: Kelas) => (id: string) => setD(p => ({ ...p, [k]: p[k].filter(a => a.id !== id) }))
@@ -236,7 +235,7 @@ export default function Home() {
   }
   const donut = KELAS.map(k => ({ k, name: t(NAMA[k]), value: sum(k, 'nilai') })).filter(x => x.value > 0)
   const tabs: ['ringkasan' | Kelas, string][] = [['ringkasan', 'Ringkasan'], ...KELAS.map(k => [k, NAMA[k]] as [Kelas, string])]
- 
+
   if (sb && cek) return null
   if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} />
   return (
@@ -255,7 +254,7 @@ export default function Home() {
         <nav className="-mb-1 mt-3 flex gap-1 overflow-x-auto">{tabs.map(([k, n]) => <button key={k} onClick={() => setTab(k)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === k ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-600 dark:text-slate-400'}`}>{t(n)}</button>)}</nav>
       </header>
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900">{msg}</p>}
- 
+
       {tab === 'ringkasan' ? (
         <main className="mt-4 space-y-4">
           <div className="grid gap-3 sm:grid-cols-3">
@@ -299,4 +298,3 @@ export default function Home() {
     </div>
   )
 }
- 
