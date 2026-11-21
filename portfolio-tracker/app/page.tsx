@@ -11,6 +11,7 @@ import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, h
 const NAMA: Record<Kelas, string> = { saham: 'Saham', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
 const WARNA: Record<Kelas, string> = { saham: '#2563eb', reksa: '#059669', crypto: '#d97706', forex: '#0891b2', emas: '#ca8a04', properti: '#be123c', deposito: '#7c3aed' }
 const KELAS = Object.keys(NAMA) as Kelas[]
+const KREDIT = 'Created by Dani'
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 const pct = (n: number) => `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`
 const warna = (n: number) => (n >= 0 ? 'text-emerald-600' : 'text-red-600')
@@ -253,6 +254,7 @@ function Masuk({ t, lang, setLang }: { t: (s: string) => string; lang: Lang; set
       {err && <p className="text-sm text-red-600">{err}</p>}{info && <p className="text-sm text-emerald-700">{info}</p>}
       <button className="btn-p" disabled={busy} onClick={kirim}>{daftar ? t('Daftar') : t('Masuk')}</button>
       <button className="text-sm text-blue-600" onClick={() => { setDaftar(!daftar); setErr(''); setInfo('') }}>{daftar ? t('Sudah punya akun? Masuk') : t('Belum punya akun? Daftar')}</button>
+      <p className="mt-4 text-center text-xs text-slate-500">Portfolio Tracker™ · {KREDIT}</p>
     </div>
   )
 }
@@ -384,7 +386,7 @@ export default function Home() {
     <div className="mx-auto max-w-6xl px-4 pb-10">
       <header className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-stone-50/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-lg font-semibold">{t('Portfolio Tracker')}</h1>
+          <div><h1 className="text-lg font-semibold leading-tight">{t('Portfolio Tracker')}<sup className="text-[10px]">™</sup></h1><p className="text-[11px] leading-tight text-slate-500">{KREDIT}</p></div>
           <div className="flex flex-wrap items-center gap-2">
             <select className="!w-auto" value={lang} onChange={e => pilihBahasa(e.target.value as Lang)} aria-label="Language"><option value="id">{t('Indonesia')}</option><option value="en">{t('English')}</option></select>
             <button className="btn" onClick={() => { setHide(!hide); localStorage.setItem('pt-hide', hide ? '0' : '1') }}>{hide ? t('Tampilkan nominal') : t('Sembunyikan nominal')}</button>
@@ -446,7 +448,7 @@ export default function Home() {
         </div>
       )}
       {form && <Form t={t} k={form.k} awal={form.id ? d[form.k].find(a => a.id === form.id) : undefined} onSave={simpanAset} onClose={() => setForm(null)} />}
-      <footer className="mt-10 text-center text-xs text-slate-500">{t('Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.')}</footer>
+      <footer className="mt-10 text-center text-xs text-slate-500">{t('Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.')}<p className="mt-2 font-medium">Portfolio Tracker™ · {KREDIT} · © {new Date().getFullYear()} Dani</p></footer>
     </div>
   )
 }
