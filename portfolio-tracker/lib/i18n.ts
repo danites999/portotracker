@@ -56,5 +56,14 @@ const en: Record<string, string> = {
   'Jumlah, harga, dan tanggal beli diatur lewat Riwayat pembelian (tombol Ringkasan).': 'Amount, price and purchase date are managed in Purchase history (Summary button).',
   'Pembelian berikutnya bisa ditambahkan dengan tombol Beli lagi. Harga rata-rata dihitung otomatis.': 'Further purchases can be added with the Buy more button. The average price is calculated automatically.',
   'Beli lagi di tanggal lain? Tekan Tambah pembelian, harga rata-rata dihitung otomatis.': 'Bought again on another date? Press Add purchase, the average price is calculated automatically.',
+  'Garis total nilai di atas garis total modal berarti untung; di bawahnya berarti rugi.': 'When the total value line is above the total cost line you are in profit; below it, a loss.',
+  naik: 'up', turun: 'down', 'Harga pasar berjalan': 'Running market prices', Charts: 'Charts', 'Kalender ekonomi': 'Economic calendar',
+  'Jadwal rilis data ekonomi yang sering menggerakkan pasar. Waktu mengikuti zona waktu perangkatmu.': 'Schedule of economic data releases that often move markets. Times follow your device time zone.',
+  Dampak: 'Impact', Semua: 'All', Sedang: 'Medium', Tinggi: 'High', Rendah: 'Low', Libur: 'Holiday', 'Hari ini saja': 'Today only', Waktu: 'Time', Peristiwa: 'Event', Perkiraan: 'Forecast', Sebelumnya: 'Previous', 'Sepanjang hari': 'All day',
+  'Memuat kalender…': 'Loading calendar…', 'Kalender gagal dimuat. Coba lagi nanti.': 'Failed to load the calendar. Try again later.', 'Tidak ada peristiwa untuk filter ini.': 'No events for this filter.',
+  'Sumber: feed publik Forex Factory, judul peristiwa dalam bahasa Inggris. Mencakup ekonomi utama dunia, belum termasuk data Indonesia (BI Rate, inflasi BPS). Untuk itu lihat bi.go.id dan bps.go.id.': 'Source: Forex Factory public feed. Covers major world economies, not Indonesian data (BI Rate, BPS inflation); see bi.go.id and bps.go.id for those.',
+  'Lihat pergerakan harga saham, indeks, crypto, kurs, dan emas.': 'See price movements of stocks, indices, crypto, exchange rates and gold.', Indeks: 'Index', 'Aset saya': 'My assets', Populer: 'Popular', Tampilkan: 'Show', 'Emas (per gram)': 'Gold (per gram)',
+  '1 Bulan': '1 Month', '3 Bulan': '3 Months', '6 Bulan': '6 Months', '1 Tahun': '1 Year', '5 Tahun': '5 Years', 'Memuat grafik…': 'Loading chart…', 'Data tidak tersedia untuk pilihan ini. Periksa kodenya atau coba lagi nanti.': 'No data for this selection. Check the code or try again later.',
+  Harga: 'Price', 'Harga terakhir': 'Last price', Tertinggi: 'Highest', Terendah: 'Lowest', Perubahan: 'Change', 'Sumber: Yahoo Finance dan CoinGecko, penutupan harian. Harga saham tertunda sekitar 10-15 menit.': 'Source: Yahoo Finance and CoinGecko, daily closes. Stock prices are delayed about 10-15 minutes.',
 }
 export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
