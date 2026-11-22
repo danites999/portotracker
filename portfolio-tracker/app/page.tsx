@@ -1,12 +1,15 @@
 'use client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, ReferenceLine } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, ComposedChart, Area, Line, Legend, XAxis, YAxis, ReferenceLine } from 'recharts'
 import { Data, Kelas } from '@/lib/types'
 import { muat, simpan, muatCloud, simpanCloud, kosong, ekspor, impor, contoh } from '@/lib/storage'
 import { sb } from '@/lib/supabase'
 import { tr, Lang } from '@/lib/i18n'
 import { hitung, rp, Baris } from '@/lib/calc'
 import { Awal, Logo, T } from './Awal'
+import { Ticker } from './Ticker'
+import { Kalender } from './Kalender'
+import { Charts, Pil } from './Charts'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
 
@@ -360,7 +363,7 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
 export default function Home() {
   const [d, setD] = useState<Data>(kosong())
   const [ok, setOk] = useState(false)
-  const [tab, setTab] = useState<'ringkasan' | Kelas>('ringkasan')
+  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
   const [layar, setLayar] = useState<'awal' | 'masuk'>('awal')
   const [daftarAwal, setDaftarAwal] = useState(false)
@@ -450,12 +453,12 @@ export default function Home() {
   const total = KELAS.reduce((a, k) => a + sum(k, 'nilai'), 0), modal = KELAS.reduce((a, k) => a + sum(k, 'modal'), 0)
   const pl = total - modal
   const hist = useMemo(() => totalHarian(d, rows, cache), [d, rows, cache])
-  const grafik = useMemo(() => {
+  const grafik = useMemo<{ t: string; v: number; m?: number }[]>(() => {
     if (hist.seri.length < 2) return d.riwayat
-    const s = hist.seri.slice(), today = hariIni()
-    if (total > 0) { if (s[s.length - 1].t === today) s[s.length - 1] = { t: today, v: total }; else s.push({ t: today, v: total }) }
+    const s = hist.seri.slice(), today = hariIni(), p = { t: today, v: total, m: modal }
+    if (total > 0) { if (s[s.length - 1].t === today) s[s.length - 1] = p; else s.push(p) }
     return ringkas(s)
-  }, [hist, d.riwayat, total])
+  }, [hist, d.riwayat, total, modal])
   const pakaiHist = hist.seri.length > 1
   const tickTotal = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(t('id-ID'), grafik.length > 180 ? { month: 'short', year: '2-digit', timeZone: 'UTC' } : { day: 'numeric', month: 'short', timeZone: 'UTC' })
   const pilih = (k: Kelas) => { setTab(k); setKelasAkhir(k); setFokus(null) }
@@ -464,9 +467,9 @@ export default function Home() {
   useEffect(() => {
     if (!ok || !total) return
     const t = new Date().toISOString().slice(0, 10)
-    setD(p => { const l = p.riwayat[p.riwayat.length - 1]; if (l?.t === t && Math.round(l.v) === Math.round(total)) return p
-      return { ...p, riwayat: [...(l?.t === t ? p.riwayat.slice(0, -1) : p.riwayat), { t, v: total }].slice(-730) } })
-  }, [total, ok])
+    setD(p => { const l = p.riwayat[p.riwayat.length - 1]; if (l?.t === t && Math.round(l.v) === Math.round(total) && Math.round(l.m ?? -1) === Math.round(modal)) return p
+      return { ...p, riwayat: [...(l?.t === t ? p.riwayat.slice(0, -1) : p.riwayat), { t, v: total, m: modal }].slice(-730) } })
+  }, [total, modal, ok])
 
   const M = (n: number) => (hide ? 'Rp ••••••' : rp(n))
   const simpanAset = (o: any) => { const k = form!.k; setD(p => ({ ...p, [k]: p[k].some(a => a.id === o.id) ? p[k].map(a => (a.id === o.id ? o : a)) : [...p[k], o] })); setForm(null); setTimeout(refresh, 0) }
@@ -485,14 +488,21 @@ export default function Home() {
   const donut = KELAS.map(k => ({ k, name: t(NAMA[k]), value: sum(k, 'nilai') })).filter(x => x.value > 0)
   const tabs: ['ringkasan' | Kelas, string][] = [['ringkasan', 'Ringkasan'], ...KELAS.map(k => [k, NAMA[k]] as [Kelas, string])]
 
-  const fAset = tab !== 'ringkasan' && fokus ? d[tab].find(a => a.id === fokus) : undefined
-  const fBaris = tab !== 'ringkasan' && fAset ? rows[tab].find(r => r.id === fAset.id) : undefined
+  const kelasTab: Kelas | null = KELAS.includes(tab as Kelas) ? (tab as Kelas) : null
+  const fAset = kelasTab && fokus ? d[kelasTab].find(a => a.id === fokus) : undefined
+  const fBaris = kelasTab && fAset ? rows[kelasTab].find(r => r.id === fAset.id) : undefined
+  const sahamTick = useMemo(() => Array.from(new Set([...d.saham.map(a => a.kode), 'BBCA', 'BBRI', 'BMRI', 'BBNI', 'TLKM', 'ASII', 'GOTO', 'ANTM'])).slice(0, 20), [d.saham])
+  const mataTick = useMemo(() => Array.from(new Set([...(d.forex || []).map(a => a.mata), 'USD', 'EUR', 'SGD', 'JPY'])).slice(0, 8), [d.forex])
+  const punyaChart = useMemo((): Pil[] => {
+    const l: Pil[] = [...d.saham.map((a): Pil => ({ j: 'saham', s: a.kode, n: a.kode })), ...d.crypto.map((a): Pil => ({ j: 'crypto', s: a.coinId, n: a.simbol })), ...(d.forex || []).map((a): Pil => ({ j: 'forex', s: a.mata, n: `${a.mata}/IDR` })), ...((d.emas || []).length ? [{ j: 'emas', s: '', n: 'Emas' } as Pil] : [])]
+    return l.filter((x, i) => l.findIndex(y => y.j === x.j && y.s === x.s) === i)
+  }, [d.saham, d.crypto, d.forex, d.emas])
 
   if (sb && cek) return null
   if ((!sb || !user) && layar === 'awal') return <Awal t={t} lang={lang} setLang={pilihBahasa} lokal={!sb} onMasuk={() => { setDaftarAwal(false); setLayar('masuk') }} onDaftar={() => { setDaftarAwal(true); setLayar('masuk') }} />
   if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} daftarAwal={daftarAwal} onKembali={() => setLayar('awal')} />
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-10">
+    <div className="mx-auto max-w-6xl px-4 pb-20">
       <header className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-stone-50/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div><h1 className="text-lg font-semibold leading-tight">{t('Portfolio Tracker')}<sup className="text-[10px]">™</sup></h1><p className="text-[11px] leading-tight text-slate-500">{KREDIT}</p></div>
@@ -507,9 +517,12 @@ export default function Home() {
         </div>
         <nav className="mt-3 flex flex-wrap items-center gap-2">
           <button onClick={() => { setTab('ringkasan'); setFokus(null) }} className={`whitespace-nowrap rounded-lg border border-emerald-700 px-3 py-1.5 text-sm font-medium ${tab === 'ringkasan' ? 'bg-emerald-700 text-white' : 'text-emerald-700 dark:text-emerald-500'}`}>{t('Ringkasan total')}</button>
-          <button onClick={() => tab === 'ringkasan' && pilih(kelasAkhir)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${tab !== 'ringkasan' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400'}`}>{t('Investasi')}</button>
+          {([['investasi', 'Investasi'], ['charts', 'Charts'], ['kalender', 'Kalender ekonomi']] as const).map(([id, nama]) => {
+            const aktif = id === 'investasi' ? !!kelasTab : tab === id
+            return <button key={id} onClick={() => { setFokus(null); if (id === 'investasi') { if (!kelasTab) pilih(kelasAkhir) } else setTab(id) }} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${aktif ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400'}`}>{t(nama)}</button>
+          })}
         </nav>
-        {tab !== 'ringkasan' && <nav className="mt-2 flex gap-1 overflow-x-auto border-t border-slate-200 pt-2 dark:border-slate-800">{KELAS.map(k => <button key={k} onClick={() => pilih(k)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === k ? 'bg-slate-200 font-medium dark:bg-slate-700' : 'text-slate-600 dark:text-slate-400'}`}>{t(NAMA[k])}</button>)}</nav>}
+        {kelasTab && <nav className="mt-2 flex gap-1 overflow-x-auto border-t border-slate-200 pt-2 dark:border-slate-800">{KELAS.map(k => <button key={k} onClick={() => pilih(k)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === k ? 'bg-slate-200 font-medium dark:bg-slate-700' : 'text-slate-600 dark:text-slate-400'}`}>{t(NAMA[k])}</button>)}</nav>}
       </header>
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900">{msg}</p>}
 
@@ -521,9 +534,16 @@ export default function Home() {
             <div className={card}><p className="text-sm text-slate-500">{t('Untung/rugi')}</p><p className={`text-2xl font-semibold ${warna(pl)}`}>{M(pl)}</p><p className={`text-sm ${warna(pl)}`}>{pct(modal ? (pl / modal) * 100 : 0)}</p></div>
           </div>
           <div className={card}><h2 className="mb-2 font-medium">{t('Riwayat nilai total')}</h2>
-            {grafik.length > 1 ? <div className="h-64"><ResponsiveContainer><AreaChart data={grafik}><XAxis dataKey="t" tick={{ fontSize: 11 }} tickFormatter={tickTotal} minTickGap={40} /><YAxis hide domain={['auto', 'auto']} /><Tooltip formatter={(v: number) => M(v)} labelFormatter={(x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(t('id-ID'), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })} /><Area dataKey="v" type="monotone" stroke="#059669" fill="#05966933" /></AreaChart></ResponsiveContainer></div>
+            {grafik.length > 1 ? <div className="h-72"><ResponsiveContainer><ComposedChart data={grafik}>
+              <XAxis dataKey="t" tick={{ fontSize: 11 }} tickFormatter={tickTotal} minTickGap={40} /><YAxis hide domain={['auto', 'auto']} />
+              <Tooltip formatter={(v: number) => M(v)} labelFormatter={(x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(t('id-ID'), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })} />
+              <Legend verticalAlign="top" height={28} iconType="plainline" />
+              <Area name={t('Total nilai')} dataKey="v" type="monotone" stroke="#059669" strokeWidth={2} fill="#05966926" />
+              <Line name={t('Total modal')} dataKey="m" type="stepAfter" stroke="#64748b" strokeWidth={2} strokeDasharray="5 4" dot={false} connectNulls />
+            </ComposedChart></ResponsiveContainer></div>
               : <p className="py-10 text-center text-sm text-slate-500">{t('Grafik muncul setelah aplikasi dibuka di lebih dari satu hari.')}</p>}
-            {pakaiHist && <p className="mt-2 text-xs text-slate-500">{t('Dihitung dari tanggal beli tiap aset memakai harga historis.')}{hist.tanpaData > 0 && ` ${t('Aset tanpa data harga historis dihitung sebesar modal.')}`}{butuh.some(n => !cache[n.key]) && ` ${t('Memuat riwayat harga…')}`}</p>}
+            {grafik.length > 1 && <p className="mt-2 text-xs text-slate-500">{t('Garis total nilai di atas garis total modal berarti untung; di bawahnya berarti rugi.')}</p>}
+            {pakaiHist && <p className="mt-1 text-xs text-slate-500">{t('Dihitung dari tanggal beli tiap aset memakai harga historis.')}{hist.tanpaData > 0 && ` ${t('Aset tanpa data harga historis dihitung sebesar modal.')}`}{butuh.some(n => !cache[n.key]) && ` ${t('Memuat riwayat harga…')}`}</p>}
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <div className={card}><h2 className="mb-2 font-medium">{t('Alokasi aset')}</h2>
@@ -546,6 +566,10 @@ export default function Home() {
             <p className="mt-2 text-xs text-slate-500">{t(sb ? 'Data tersimpan di akunmu. Ekspor JSON tetap berguna sebagai cadangan.' : 'Data tersimpan hanya di browser ini. Ekspor secara berkala sebagai cadangan.')}</p>
           </div>
         </main>
+      ) : tab === 'charts' ? (
+        <main className="mt-4"><Charts t={t} punya={punyaChart} /></main>
+      ) : tab === 'kalender' ? (
+        <main className="mt-4"><Kalender t={t} /></main>
       ) : (
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <main className="min-w-0 space-y-3">
@@ -558,6 +582,7 @@ export default function Home() {
       )}
       {formTrx && (() => { const a = d[formTrx.k].find(x => x.id === formTrx.aid); return a ? <FormTrx k={formTrx.k} a={a} awal={formTrx.tid ? daftarTrx(formTrx.k, a).find(x => x.id === formTrx.tid) : undefined} t={t} onSave={simpanTrx} onClose={() => setFormTrx(null)} /> : null })()}
       {form && <Form t={t} k={form.k} awal={form.id ? d[form.k].find(a => a.id === form.id) : undefined} onSave={simpanAset} onClose={() => setForm(null)} />}
+      <Ticker saham={sahamTick} mata={mataTick} t={t} />
       <footer className="mt-10 text-center text-xs text-slate-500">{t('Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.')}<p className="mt-2 font-medium">Portfolio Tracker™ · {KREDIT} · © {new Date().getFullYear()} Dani</p></footer>
     </div>
   )
