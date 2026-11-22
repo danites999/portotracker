@@ -1,6 +1,7 @@
 // Semua akses data lewat modul ini. Untuk pindah ke Supabase, ganti isi muat/simpan (jadikan async).
 import { Data } from './types'
 import { sb } from './supabase'
+import { terapkan } from './transaksi'
 const KEY = 'portfolio-tracker-v1'
 export const kosong = (): Data => ({ saham: [], reksa: [], crypto: [], forex: [], emas: [], properti: [], deposito: [], riwayat: [], harga: { saham: {}, crypto: {}, forex: {}, emas: 0, kurs: 16000, waktu: {} } })
 const gabung = (j: any): Data => { const k = kosong(); return { ...k, ...j, harga: { ...k.harga, ...(j.harga || {}) } } }
@@ -18,7 +19,7 @@ export async function impor(f: File): Promise<Data> {
 }
 const id = () => Math.random().toString(36).slice(2) + Date.now().toString(36)
 export const contoh = (): Data => ({ ...kosong(),
-  saham: [{ id: id(), kode: 'BBCA', lembar: 1000, hargaBeli: 9000, tanggal: '2026-03-10' }, { id: id(), kode: 'TLKM', lembar: 2000, hargaBeli: 3000, tanggal: '2026-05-02' }],
+  saham: [terapkan('saham', { id: id(), kode: 'BBCA' }, [{ id: id(), tanggal: '2026-03-10', jumlah: 500, harga: 8800 }, { id: id(), tanggal: '2026-04-20', jumlah: 500, harga: 9200 }]), { id: id(), kode: 'TLKM', lembar: 2000, hargaBeli: 3000, tanggal: '2026-05-02' }],
   reksa: [{ id: id(), nama: 'Contoh Pasar Uang', jenis: 'Pasar uang', unit: 5000, navBeli: 1500, tanggal: '2026-02-01', navTerbaru: 1520, tglNav: new Date().toISOString().slice(0, 10) }],
   crypto: [{ id: id(), coinId: 'bitcoin', simbol: 'BTC', jumlah: 0.01, hargaBeli: 60000, mata: 'USD', tanggal: '2026-04-01' }, { id: id(), coinId: 'ethereum', simbol: 'ETH', jumlah: 0.2, hargaBeli: 40000000, mata: 'IDR', tanggal: '2026-04-15' }],
   forex: [{ id: id(), mata: 'USD', jumlah: 1000, kursBeli: 16000, tanggal: '2026-06-01' }, { id: id(), mata: 'SGD', jumlah: 500, kursBeli: 12000, tanggal: '2026-07-01' }],
