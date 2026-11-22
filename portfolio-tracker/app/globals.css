@@ -10,3 +10,9 @@ input, select { @apply w-full rounded-lg border border-slate-300 bg-white px-3 p
 .garis-gambar { stroke-dasharray: 1; stroke-dashoffset: 1; animation: gambar-garis 1.8s cubic-bezier(.4, 0, .2, 1) .3s forwards; }
 @keyframes gambar-garis { to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .garis-gambar { animation: none; stroke-dashoffset: 0; } }
+
+/* Running text harga pasar (Ticker): bergeser pelan, berhenti saat disorot kursor */
+.ticker-jalan { animation: ticker-geser 60s linear infinite; will-change: transform; }
+.ticker:hover .ticker-jalan { animation-play-state: paused; }
+@keyframes ticker-geser { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .ticker { overflow-x: auto; } .ticker-jalan { animation: none; } }
