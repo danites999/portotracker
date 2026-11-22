@@ -7,6 +7,7 @@ import { sb } from '@/lib/supabase'
 import { tr, Lang } from '@/lib/i18n'
 import { hitung, rp, Baris } from '@/lib/calc'
 import { Awal, Logo, T } from './Awal'
+import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
 
 const NAMA: Record<Kelas, string> = { saham: 'Saham', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
@@ -20,13 +21,20 @@ const jam = (s: string | undefined, t: (x: string) => string) => (s ? new Date(s
 
 type Fld = [string, string, string, string[]?]
 const F: Record<Kelas, Fld[]> = {
-  saham: [['kode', 'Kode saham (mis. BBCA)', 'text'], ['jumlah', 'Jumlah', 'number'], ['satuan', 'Satuan', 'select', ['Lot', 'Lembar']], ['hargaBeli', 'Harga beli rata-rata per lembar (Rp)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
+  saham: [['kode', 'Kode saham (mis. BBCA)', 'text'], ['jumlah', 'Jumlah', 'number'], ['satuan', 'Satuan', 'select', ['Lot', 'Lembar']], ['hargaBeli', 'Harga beli per lembar (Rp)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
   reksa: [['nama', 'Nama produk', 'text'], ['jenis', 'Jenis', 'select', ['Pasar uang', 'Obligasi', 'Campuran', 'Saham']], ['unit', 'Jumlah unit', 'number'], ['navBeli', 'NAV beli per unit (Rp)', 'number'], ['tanggal', 'Tanggal beli', 'date'], ['navTerbaru', 'NAV terbaru (Rp)', 'number'], ['tglNav', 'Tanggal NAV terbaru', 'date']],
-  crypto: [['coinId', 'ID coin CoinGecko (mis. bitcoin)', 'text'], ['simbol', 'Simbol (mis. BTC)', 'text'], ['jumlah', 'Jumlah koin', 'desimal'], ['hargaBeli', 'Harga beli rata-rata per koin', 'number'], ['mata', 'Mata uang harga beli', 'select', ['IDR', 'USD']], ['tanggal', 'Tanggal beli', 'date']],
-  forex: [['mata', 'Mata uang', 'select', ['USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'MYR', 'CNY', 'HKD', 'SAR']], ['jumlah', 'Jumlah (dalam mata uang asing)', 'number'], ['kursBeli', 'Kurs beli rata-rata (Rp per 1 unit)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
+  crypto: [['coinId', 'ID coin CoinGecko (mis. bitcoin)', 'text'], ['simbol', 'Simbol (mis. BTC)', 'text'], ['jumlah', 'Jumlah koin', 'desimal'], ['hargaBeli', 'Harga beli per koin', 'number'], ['mata', 'Mata uang harga beli', 'select', ['IDR', 'USD']], ['tanggal', 'Tanggal beli', 'date']],
+  forex: [['mata', 'Mata uang', 'select', ['USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'MYR', 'CNY', 'HKD', 'SAR']], ['jumlah', 'Jumlah (dalam mata uang asing)', 'number'], ['kursBeli', 'Kurs beli (Rp per 1 unit)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
   emas: [['jenis', 'Jenis', 'select', ['Emas batangan', 'Perhiasan', 'Emas digital']], ['gram', 'Jumlah (gram)', 'number'], ['hargaBeli', 'Harga beli per gram (Rp)', 'number'], ['hargaManual', 'Harga jual sekarang per gram (opsional)', 'number'], ['tanggal', 'Tanggal beli', 'date']],
   properti: [['nama', 'Nama properti', 'text'], ['jenis', 'Jenis', 'select', ['Tanah', 'Rumah', 'Apartemen', 'Ruko']], ['lokasi', 'Lokasi (opsional)', 'text'], ['hargaBeli', 'Harga beli (Rp)', 'number'], ['nilai', 'Estimasi nilai sekarang (Rp)', 'number'], ['tglNilai', 'Tanggal estimasi nilai', 'date'], ['tanggal', 'Tanggal beli', 'date']],
   deposito: [['bank', 'Bank', 'text'], ['pokok', 'Nominal pokok (Rp)', 'number'], ['bunga', 'Bunga per tahun (%)', 'number'], ['tanggal', 'Tanggal mulai', 'date'], ['tenor', 'Tenor (bulan)', 'number'], ['pajak', 'Pajak bunga (%)', 'number'], ['aro', 'Perpanjang otomatis (ARO)', 'select', ['Tidak', 'Ya']]],
+}
+
+// Field yang diatur lewat Riwayat pembelian (disembunyikan di form Ubah aset)
+const SEMBUNYI: Record<string, string[]> = { saham: ['jumlah', 'satuan', 'hargaBeli', 'tanggal'], reksa: ['unit', 'navBeli', 'tanggal'], crypto: ['jumlah', 'hargaBeli', 'tanggal'], forex: ['jumlah', 'kursBeli', 'tanggal'], emas: ['gram', 'hargaBeli', 'tanggal'] }
+const labelJumlah = (k: Kelas, q: number, a: any, loc: string, t: (s: string) => string) => {
+  const f = (n: number) => n.toLocaleString(loc, { maximumFractionDigits: 8 })
+  return k === 'saham' ? (q % 100 === 0 ? `${f(q / 100)} lot (${f(q)} ${t('lembar')})` : `${f(q)} ${t('lembar')}`) : k === 'reksa' ? `${f(q)} ${t('unit')}` : k === 'crypto' ? `${f(q)} ${a.simbol}` : k === 'forex' ? `${f(q)} ${a.mata}` : `${f(q)} gram`
 }
 
 // Login memakai username: di balik layar diubah jadi email palsu "username@DOMAIN" karena Supabase Auth butuh email.
@@ -78,7 +86,7 @@ function Berita({ q, label, lang, t }: { q: string; label: string; lang: Lang; t
   )
 }
 
-function RingkasanAset({ k, a, r, cache, M, t }: { k: Kelas; a: any; r: Baris; cache: Cache; M: (n: number) => string; t: (s: string) => string }) {
+function RingkasanAset({ k, a, r, cache, M, t, onTambahTrx, onUbahTrx, onHapusTrx }: { k: Kelas; a: any; r: Baris; cache: Cache; M: (n: number) => string; t: (s: string) => string; onTambahTrx: () => void; onUbahTrx: (id: string) => void; onHapusTrx: (id: string) => void }) {
   const loc = t('id-ID'), pasar = k === 'saham' || k === 'crypto' || k === 'forex' || k === 'emas'
   const c = dariApi(k) && !(k === 'emas' && a.hargaManual > 0) ? cache[kunciSeri(k, a)] : undefined
   const s = useMemo(() => seriAset(k, a, c), [k, a, c])
@@ -121,6 +129,7 @@ function RingkasanAset({ k, a, r, cache, M, t }: { k: Kelas; a: any; r: Baris; c
             {k === 'crypto' && typeof c === 'object' && c.potong && <p className="mt-1 text-xs text-slate-500">{t('Data harga crypto gratis hanya mencakup 365 hari terakhir.')}</p>}</>
           : <p className={msg}>{t('Belum cukup data untuk grafik.')}</p>}
       </div>
+      {punyaTrx(k) && <RiwayatBeli k={k} a={a} M={M} t={t} onTambah={onTambahTrx} onUbah={onUbahTrx} onHapus={onHapusTrx} />}
     </div>
   )
 }
@@ -139,6 +148,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
     })
     return o
   })
+  const fields = F[k].filter(([key]) => !(awal && SEMBUNYI[k]?.includes(key))) // aset lama: jumlah/harga/tanggal diubah lewat Riwayat pembelian
   const [err, setErr] = useState('')
   const [opsi, setOpsi] = useState<any[]>([])
   const ubah = (key: string, val: string) => {
@@ -150,7 +160,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
     }
   }
   const kirim = () => {
-    for (const [key, label, tp] of F[k]) {
+    for (const [key, label, tp] of fields) {
       const x = (v[key] || '').trim()
       if (tp === 'select') continue
       if (!x) { if (key === 'hargaManual' || key === 'lokasi') continue; return setErr(`${t(label)} ${t('wajib diisi')}`) }
@@ -160,12 +170,14 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
         if (n === 0 && key !== 'bunga' && key !== 'pajak') return setErr(`${t(label)} ${t('harus lebih dari 0')}`)
       }
     }
+    if (k === 'saham' && !awal) { const lb = (v.satuan === 'Lot' ? 100 : 1) * Number(v.jumlah); if (Math.abs(lb - Math.round(lb)) > 1e-9) return setErr(t('Jumlah lembar harus bilangan bulat')) }
     if (k === 'deposito' && (Number(v.pajak) > 100 || !Number.isInteger(Number(v.tenor)))) return setErr(t('Pajak maksimal 100% dan tenor harus bilangan bulat'))
-    const o: any = { id: awal?.id || Math.random().toString(36).slice(2) + Date.now().toString(36) }
-    F[k].forEach(([key, , tp]) => { o[key] = tp === 'number' ? Number(v[key]) : tp === 'desimal' ? Number(v[key].trim().replace(',', '.')) : v[key].trim() })
-    if (k === 'saham') { o.lembar = v.satuan === 'Lot' ? o.jumlah * 100 : o.jumlah; o.kode = o.kode.toUpperCase(); delete o.jumlah; delete o.satuan }
+    const o: any = { ...(awal || {}), id: awal?.id || Math.random().toString(36).slice(2) + Date.now().toString(36) }
+    fields.forEach(([key, , tp]) => { o[key] = tp === 'number' ? Number(v[key]) : tp === 'desimal' ? Number(v[key].trim().replace(',', '.')) : v[key].trim() })
+    if (k === 'saham') { if (!awal) o.lembar = Math.round(v.satuan === 'Lot' ? o.jumlah * 100 : o.jumlah); o.kode = o.kode.toUpperCase(); delete o.jumlah; delete o.satuan }
     if (k === 'crypto') { o.coinId = o.coinId.toLowerCase(); o.simbol = o.simbol.toUpperCase() }
     if (k === 'deposito') o.aro = v.aro === 'Ya'
+    if (punyaTrx(k) && !awal) o.transaksi = [{ id: Math.random().toString(36).slice(2) + Date.now().toString(36), tanggal: o.tanggal, jumlah: o[KUNCI[k].q], harga: o[KUNCI[k].h] }] // pembelian pertama
     onSave(o)
   }
   return (
@@ -173,12 +185,13 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
       <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 dark:bg-slate-900 sm:rounded-2xl" onClick={e => e.stopPropagation()}>
         <h2 className="mb-4 text-lg font-semibold">{t(awal ? 'Ubah' : 'Tambah')} {t(NAMA[k]).toLowerCase()}</h2>
         <div className="space-y-3">
-          {F[k].map(([key, label, tp, opts]) => (
+          {fields.map(([key, label, tp, opts]) => (
             <label key={key} className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(label)}</span>
               {tp === 'select' ? <select value={v[key]} onChange={e => ubah(key, e.target.value)}>{opts!.map(o => <option key={o} value={o}>{t(o)}</option>)}</select>
                 : <input type={tp === 'number' ? 'number' : tp === 'desimal' ? 'text' : tp} step="any" inputMode={tp === 'number' || tp === 'desimal' ? 'decimal' : undefined} placeholder={tp === 'desimal' ? '0.5' : undefined} list={key === 'coinId' ? 'coins' : undefined} value={v[key]} onChange={e => ubah(key, tp === 'desimal' ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />}
             </label>
           ))}
+          {punyaTrx(k) && <p className="text-xs text-slate-500">{awal ? t('Jumlah, harga, dan tanggal beli diatur lewat Riwayat pembelian (tombol Ringkasan).') : t('Pembelian berikutnya bisa ditambahkan dengan tombol Beli lagi. Harga rata-rata dihitung otomatis.')}</p>}
           <datalist id="coins">{opsi.map(c => <option key={c.id} value={c.id}>{c.name} ({c.symbol})</option>)}</datalist>
         </div>
         {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
@@ -188,12 +201,78 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
   )
 }
 
-function Daftar({ rows, M, t, onEdit, onDel, fokus, onFokus }: { t: (s: string) => string; rows: Baris[]; M: (n: number) => string; onEdit: (id: string) => void; onDel: (id: string) => void; fokus: string | null; onFokus: (id: string) => void }) {
+function FormTrx({ k, a, awal, t, onSave, onClose }: { k: Kelas; a: any; awal?: Trx; t: (s: string) => string; onSave: (x: Trx) => void; onClose: () => void }) {
+  const today = new Date().toISOString().slice(0, 10), saham = k === 'saham', desimal = k === 'crypto', loc = t('id-ID'), usd = k === 'crypto' && a.mata === 'USD'
+  const plain = (n: number) => n.toLocaleString('en-US', { useGrouping: false, maximumFractionDigits: 12 })
+  const kelipatanLot = !!awal && saham && awal.jumlah % 100 === 0
+  const [tgl, setTgl] = useState(awal?.tanggal || today)
+  const [satuan, setSatuan] = useState(saham && awal && !kelipatanLot ? 'Lembar' : 'Lot')
+  const [jml, setJml] = useState(awal ? plain(saham && kelipatanLot ? awal.jumlah / 100 : awal.jumlah) : '')
+  const [hrg, setHrg] = useState(awal ? plain(awal.harga) : '')
+  const [err, setErr] = useState('')
+  const num = (x: string) => Number(x.trim().replace(',', '.'))
+  const lembar = saham && satuan === 'Lot' ? num(jml) * 100 : num(jml)
+  const qLabel = F[k].find(f => f[0] === (saham ? 'jumlah' : KUNCI[k].q))![1]
+  const hLabel = F[k].find(f => f[0] === KUNCI[k].h)![1] + (k === 'crypto' ? ` (${a.mata})` : '')
+  const uang = (n: number) => (usd ? `US$${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : rp(n))
+  const valid = jml.trim() !== '' && hrg.trim() !== '' && isFinite(lembar) && lembar > 0 && isFinite(num(hrg)) && num(hrg) > 0
+  const rt = valid ? ringkasTrx([...daftarTrx(k, a).filter(x => x.id !== awal?.id), { id: 'x', tanggal: tgl || today, jumlah: lembar, harga: num(hrg) }]) : null
+  const kirim = () => {
+    if (!tgl) return setErr(`${t('Tanggal beli')} ${t('wajib diisi')}`)
+    if (tgl > today) return setErr(t('Tanggal beli tidak boleh di masa depan'))
+    if (!jml.trim() || !isFinite(num(jml)) || num(jml) <= 0) return setErr(`${t(qLabel)} ${t('harus lebih dari 0')}`)
+    if (!hrg.trim() || !isFinite(num(hrg)) || num(hrg) <= 0) return setErr(`${t(hLabel)} ${t('harus lebih dari 0')}`)
+    if (saham && Math.abs(lembar - Math.round(lembar)) > 1e-9) return setErr(t('Jumlah lembar harus bilangan bulat'))
+    onSave({ id: awal?.id || Math.random().toString(36).slice(2) + Date.now().toString(36), tanggal: tgl, jumlah: saham ? Math.round(lembar) : lembar, harga: num(hrg) })
+  }
+  const nama = a.kode || a.simbol || a.nama || a.mata || t(a.jenis || '')
+  return (
+    <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/50 sm:items-center" onClick={onClose}>
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 dark:bg-slate-900 sm:rounded-2xl" onClick={e => e.stopPropagation()}>
+        <h2 className="mb-4 text-lg font-semibold">{t(awal ? 'Ubah pembelian' : 'Tambah pembelian')} {nama}</h2>
+        <div className="space-y-3">
+          <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Tanggal beli')}</span><input type="date" max={today} value={tgl} onChange={e => setTgl(e.target.value)} /></label>
+          <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(qLabel)}</span>
+            <span className="flex gap-2"><input type={desimal ? 'text' : 'number'} step="any" inputMode="decimal" placeholder={desimal ? '0.5' : undefined} value={jml} onChange={e => setJml(desimal ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />
+              {saham && <select className="!w-28" value={satuan} onChange={e => setSatuan(e.target.value)}><option value="Lot">{t('Lot')}</option><option value="Lembar">{t('Lembar')}</option></select>}</span></label>
+          <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(hLabel)}</span><input type="number" step="any" inputMode="decimal" value={hrg} onChange={e => setHrg(e.target.value)} /></label>
+        </div>
+        {rt && <p className="mt-3 rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-800">{t('Setelah disimpan')}: <b>{labelJumlah(k, rt.jumlah, a, loc, t)}</b>, {t('harga rata-rata')} <b>{uang(rt.rata)}</b></p>}
+        {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
+        <div className="mt-5 flex justify-end gap-2"><button className="btn" onClick={onClose}>{t('Batal')}</button><button className="btn-p" onClick={kirim}>{t('Simpan')}</button></div>
+      </div>
+    </div>
+  )
+}
+
+function RiwayatBeli({ k, a, M, t, onTambah, onUbah, onHapus }: { k: Kelas; a: any; M: (n: number) => string; t: (s: string) => string; onTambah: () => void; onUbah: (id: string) => void; onHapus: (id: string) => void }) {
+  const loc = t('id-ID'), trx = daftarTrx(k, a), rt = ringkasTrx(trx), usd = k === 'crypto' && a.mata === 'USD'
+  const tgl = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
+  const uang = (n: number) => (usd ? `US$${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : M(n))
+  const td = 'px-2 py-1.5', th = 'px-2 py-1.5 font-medium'
+  return (
+    <div className="mt-5">
+      <div className="mb-2 flex items-center justify-between gap-2"><h3 className="text-sm font-medium">{t('Riwayat pembelian')}</h3><button className="btn-p" onClick={onTambah}>{t('Tambah pembelian')}</button></div>
+      <div className="overflow-x-auto"><table className="w-full text-sm">
+        <thead className="text-left text-xs text-slate-500"><tr><th className={th}>{t('Tanggal beli')}</th><th className={th}>{t('Jumlah')}</th><th className={th}>{t('Harga beli')}</th><th className={th}>{t('Nilai beli')}</th><th /></tr></thead>
+        <tbody>{trx.map(x => (
+          <tr key={x.id} className="border-t border-slate-200 dark:border-slate-800">
+            <td className={`${td} whitespace-nowrap`}>{tgl(x.tanggal)}</td><td className={td}>{labelJumlah(k, x.jumlah, a, loc, t)}</td><td className={td}>{uang(x.harga)}</td><td className={td}>{uang(x.jumlah * x.harga)}</td>
+            <td className={`${td} whitespace-nowrap text-right`}><button className="mr-3 text-blue-600" onClick={() => onUbah(x.id)}>{t('Ubah')}</button>{trx.length > 1 && <button className="text-red-600" onClick={() => confirm(t('Hapus pembelian ini?')) && onHapus(x.id)}>{t('Hapus')}</button>}</td>
+          </tr>))}</tbody>
+        <tfoot><tr className="border-t border-slate-300 font-medium dark:border-slate-700"><td className={td}>{t('Total')}</td><td className={td}>{labelJumlah(k, rt.jumlah, a, loc, t)}</td><td className={td}>{uang(rt.rata)} <span className="text-xs font-normal text-slate-500">({t('rata-rata')})</span></td><td className={td}>{uang(rt.modal)}</td><td /></tr></tfoot>
+      </table></div>
+      {trx.length === 1 && <p className="mt-2 text-xs text-slate-500">{t('Beli lagi di tanggal lain? Tekan Tambah pembelian, harga rata-rata dihitung otomatis.')}</p>}
+    </div>
+  )
+}
+
+function Daftar({ rows, M, t, onEdit, onDel, fokus, onFokus, bisaBeli, onBeli }: { t: (s: string) => string; rows: Baris[]; M: (n: number) => string; onEdit: (id: string) => void; onDel: (id: string) => void; fokus: string | null; onFokus: (id: string) => void; bisaBeli: boolean; onBeli: (id: string) => void }) {
   if (!rows.length) return <p className="py-10 text-center text-sm text-slate-500">{t('Belum ada aset di sini. Tekan Tambah untuk memasukkan yang pertama.')}</p>
   const pl = (r: Baris) => r.nilai - r.modal
   const pp = (r: Baris) => (r.modal ? (pl(r) / r.modal) * 100 : 0)
   const Aksi = ({ id }: { id: string }) => (
-    <span className="flex flex-wrap justify-end gap-x-3 text-sm"><button className="text-emerald-700 dark:text-emerald-500" onClick={() => onFokus(id)}>{fokus === id ? t('Tutup') : t('Ringkasan')}</button><button className="text-blue-600" onClick={() => onEdit(id)}>{t('Ubah')}</button><button className="text-red-600" onClick={() => confirm(t('Hapus aset ini?')) && onDel(id)}>{t('Hapus')}</button></span>
+    <span className="flex flex-wrap justify-end gap-x-3 text-sm"><button className="text-emerald-700 dark:text-emerald-500" onClick={() => onFokus(id)}>{fokus === id ? t('Tutup') : t('Ringkasan')}</button>{bisaBeli && <button className="text-slate-700 dark:text-slate-300" onClick={() => onBeli(id)}>{t('Beli lagi')}</button>}<button className="text-blue-600" onClick={() => onEdit(id)}>{t('Ubah')}</button><button className="text-red-600" onClick={() => confirm(t('Hapus aset ini?')) && onDel(id)}>{t('Hapus')}</button></span>
   )
   const Info = ({ r }: { r: Baris }) => <p className={`text-xs ${r.warn ? 'text-amber-600' : 'text-slate-500'}`}>{r.info}{r.est != null && ` · ${t('Estimasi saat jatuh tempo')} ${M(r.est)}`}</p>
   return (
@@ -285,6 +364,7 @@ export default function Home() {
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
   const [layar, setLayar] = useState<'awal' | 'masuk'>('awal')
   const [daftarAwal, setDaftarAwal] = useState(false)
+  const [formTrx, setFormTrx] = useState<{ k: Kelas; aid: string; tid?: string } | null>(null)
   const [fokus, setFokus] = useState<string | null>(null)
   const [cache, setCache] = useState<Cache>({})
   const sedang = useRef(new Set<string>())
@@ -390,6 +470,13 @@ export default function Home() {
 
   const M = (n: number) => (hide ? 'Rp ••••••' : rp(n))
   const simpanAset = (o: any) => { const k = form!.k; setD(p => ({ ...p, [k]: p[k].some(a => a.id === o.id) ? p[k].map(a => (a.id === o.id ? o : a)) : [...p[k], o] })); setForm(null); setTimeout(refresh, 0) }
+  const simpanTrx = (x: Trx) => {
+    if (!formTrx) return
+    const { k, aid, tid } = formTrx
+    setD(p => ({ ...p, [k]: p[k].map(a => { if (a.id !== aid) return a; const l = daftarTrx(k, a); return terapkan(k, a, tid ? l.map(y => (y.id === tid ? x : y)) : [...l, x]) }) }))
+    setFokus(aid); setFormTrx(null)
+  }
+  const hapusTrx = (k: Kelas, aid: string, tid: string) => setD(p => ({ ...p, [k]: p[k].map(a => { if (a.id !== aid) return a; const l = daftarTrx(k, a); return l.length > 1 ? terapkan(k, a, l.filter(y => y.id !== tid)) : a }) }))
   const hapus = (k: Kelas) => (id: string) => setD(p => ({ ...p, [k]: p[k].filter(a => a.id !== id) }))
   const ket: Record<Kelas, string> = {
     saham: `${t('harga diperbarui')} ${jam(d.harga.waktu.saham, t)}, ${t('tertunda ±10-15 menit')}`, reksa: t('NAV manual'), crypto: `${t('harga diperbarui')} ${jam(d.harga.waktu.crypto, t)}`,
@@ -463,12 +550,13 @@ export default function Home() {
         <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <main className="min-w-0 space-y-3">
             <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">{t(NAMA[tab])}</h2><p className="text-sm text-slate-500">{t('Nilai')} {M(sum(tab, 'nilai'))} · {t('Modal')} {M(sum(tab, 'modal'))}</p></div><button className="btn-p" onClick={() => setForm({ k: tab })}>{t('Tambah')}</button></div>
-            {fAset && fBaris && <RingkasanAset k={tab} a={fAset} r={fBaris} cache={cache} M={M} t={t} />}
-            <Daftar t={t} rows={rows[tab]} M={M} onEdit={id => setForm({ k: tab, id })} onDel={hapus(tab)} fokus={fAset ? fokus : null} onFokus={id => setFokus(fokus === id ? null : id)} />
+            {fAset && fBaris && <RingkasanAset k={tab} a={fAset} r={fBaris} cache={cache} M={M} t={t} onTambahTrx={() => setFormTrx({ k: tab, aid: fAset.id })} onUbahTrx={tid => setFormTrx({ k: tab, aid: fAset.id, tid })} onHapusTrx={tid => hapusTrx(tab, fAset.id, tid)} />}
+            <Daftar t={t} rows={rows[tab]} M={M} onEdit={id => setForm({ k: tab, id })} onDel={hapus(tab)} fokus={fAset ? fokus : null} onFokus={id => setFokus(fokus === id ? null : id)} bisaBeli={punyaTrx(tab)} onBeli={id => setFormTrx({ k: tab, aid: id })} />
           </main>
           <Berita q={topik(tab, lang, fAset)} label={fAset && fBaris ? `${fBaris.nama} (${t(NAMA[tab])})` : `${t(NAMA[tab])} · ${t('berita umum')}`} lang={lang} t={t} />
         </div>
       )}
+      {formTrx && (() => { const a = d[formTrx.k].find(x => x.id === formTrx.aid); return a ? <FormTrx k={formTrx.k} a={a} awal={formTrx.tid ? daftarTrx(formTrx.k, a).find(x => x.id === formTrx.tid) : undefined} t={t} onSave={simpanTrx} onClose={() => setFormTrx(null)} /> : null })()}
       {form && <Form t={t} k={form.k} awal={form.id ? d[form.k].find(a => a.id === form.id) : undefined} onSave={simpanAset} onClose={() => setForm(null)} />}
       <footer className="mt-10 text-center text-xs text-slate-500">{t('Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.')}<p className="mt-2 font-medium">Portfolio Tracker™ · {KREDIT} · © {new Date().getFullYear()} Dani</p></footer>
     </div>
