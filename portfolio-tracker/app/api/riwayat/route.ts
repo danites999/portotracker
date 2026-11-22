@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 const H = { 'User-Agent': 'Mozilla/5.0' }
 const tgl = (s: number) => new Date(s * 1000).toISOString().slice(0, 10)
 type M = [string, number][]
+const INDEKS: Record<string, string> = { JKSE: '^JKSE', GSPC: '^GSPC', IXIC: '^IXIC', N225: '^N225' } // IHSG, S&P 500, Nasdaq, Nikkei 225
 
 async function yahoo(sym: string, dari: number): Promise<M> {
   const sampai = Math.floor(Date.now() / 1000) + 86400
@@ -37,6 +38,7 @@ export async function GET(req: Request) {
   const cache = { 'Cache-Control': 's-maxage=1800, stale-while-revalidate=3600' }
   try {
     if (k === 'saham' && /^[A-Za-z0-9]{2,6}$/.test(s)) return NextResponse.json({ seri: await yahoo(`${s.toUpperCase()}.JK`, dari) }, { headers: cache })
+    if (k === 'indeks' && INDEKS[s]) return NextResponse.json({ seri: await yahoo(INDEKS[s], dari) }, { headers: cache })
     if (k === 'forex' && /^[A-Za-z]{3}$/.test(s)) return NextResponse.json({ seri: await yahoo(`${s.toUpperCase()}IDR=X`, dari) }, { headers: cache })
     if (k === 'crypto' && /^[a-z0-9-]{1,60}$/.test(s)) { const c = await crypto(s, dari); return NextResponse.json(c, { headers: cache }) }
     if (k === 'emas') {
