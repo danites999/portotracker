@@ -77,8 +77,9 @@ export function seriAset(k: Kelas, a: Aset, c?: Cache[string]): Titik[] | null {
 
 // Riwayat total portofolio dari tanggal beli paling awal sampai hari ini.
 // Aset tanpa data harga historis dihitung sebesar modalnya (garis datar) supaya total tidak terlihat turun.
-export function totalHarian(d: Data, rows: Record<Kelas, Baris[]>, cache: Cache): { seri: Titik[]; tanpaData: number } {
-  const peta = new Map<string, number>(), today = hariIni()
+export type TitikTotal = Titik & { m: number } // v = total nilai, m = total modal pada hari itu
+export function totalHarian(d: Data, rows: Record<Kelas, Baris[]>, cache: Cache): { seri: TitikTotal[]; tanpaData: number } {
+  const peta = new Map<string, number>(), pm = new Map<string, number>(), today = hariIni()
   let awal = today, tanpaData = 0
   for (const k of Object.keys(rows) as Kelas[]) {
     for (const a of (d[k] || []) as Aset[]) {
@@ -90,17 +91,18 @@ export function totalHarian(d: Data, rows: Record<Kelas, Baris[]>, cache: Cache)
       const qAt = (t: string) => trx.reduce((n, x) => (x.tanggal <= t ? n + x.jumlah : n), 0)
       const modalAt = (t: string) => (trx.length && totalM > 0 ? (modal * trx.reduce((n, x) => (x.tanggal <= t ? n + x.jumlah * x.harga : n), 0)) / totalM : modal)
       if (a.tanggal < awal) awal = a.tanggal
+      harian(a.tanggal, today).forEach(t => pm.set(t, (pm.get(t) || 0) + modalAt(t))) // garis modal: naik di tiap tanggal pembelian
       if (s && s[0].t > a.tanggal) harian(a.tanggal, s[0].t).slice(0, -1).forEach(t => peta.set(t, (peta.get(t) || 0) + modalAt(t))) // sebelum data tersedia: sebesar modal
       if (s) s.forEach(p => peta.set(p.t, (peta.get(p.t) || 0) + (trx.length ? qAt(p.t) * p.v : p.v)))
       else { tanpaData++; harian(a.tanggal, today).forEach(t => peta.set(t, (peta.get(t) || 0) + modalAt(t))) }
     }
   }
-  const seri = harian(awal, today).filter(t => peta.has(t)).map(t => ({ t, v: peta.get(t)! }))
+  const seri = harian(awal, today).filter(t => peta.has(t)).map(t => ({ t, v: peta.get(t)!, m: pm.get(t) || 0 }))
   return { seri, tanpaData }
 }
 
 // Kurangi jumlah titik supaya grafik tetap ringan.
-export function ringkas(s: Titik[], maks = 400): Titik[] {
+export function ringkas<T extends { t: string }>(s: T[], maks = 400): T[] {
   if (s.length <= maks) return s
   const step = Math.ceil(s.length / maks), out = s.filter((_, i) => i % step === 0)
   if (out[out.length - 1] !== s[s.length - 1]) out.push(s[s.length - 1])
