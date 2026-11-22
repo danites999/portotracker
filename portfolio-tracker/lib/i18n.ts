@@ -50,5 +50,11 @@ const en: Record<string, string> = {
   'Mulai catat investasi pertamamu hari ini.': 'Start recording your first investment today.', 'Harga bukan saran investasi dan bisa tertunda.': 'Prices are not investment advice and may be delayed.',
   'Kembali ke beranda': 'Back to home', 'Buat akun': 'Create account', 'Portofoliomu, di mana pun kamu buka.': 'Your portfolio, wherever you open it.',
   'Masuk untuk melihat portofoliomu.': 'Sign in to see your portfolio.', 'Pilih username dan kata sandi untuk akun barumu.': 'Choose a username and password for your new account.',
+  'Harga beli per lembar (Rp)': 'Buy price per share (Rp)', 'Harga beli per koin': 'Buy price per coin', 'Kurs beli (Rp per 1 unit)': 'Buy rate (Rp per 1 unit)',
+  'Riwayat pembelian': 'Purchase history', 'Tambah pembelian': 'Add purchase', 'Ubah pembelian': 'Edit purchase', 'Beli lagi': 'Buy more', 'Nilai beli': 'Purchase value', 'rata-rata': 'average', 'harga rata-rata': 'average price',
+  'Setelah disimpan': 'After saving', 'Hapus pembelian ini?': 'Delete this purchase?', 'Tanggal beli tidak boleh di masa depan': 'Purchase date cannot be in the future', 'Jumlah lembar harus bilangan bulat': 'Number of shares must be a whole number',
+  'Jumlah, harga, dan tanggal beli diatur lewat Riwayat pembelian (tombol Ringkasan).': 'Amount, price and purchase date are managed in Purchase history (Summary button).',
+  'Pembelian berikutnya bisa ditambahkan dengan tombol Beli lagi. Harga rata-rata dihitung otomatis.': 'Further purchases can be added with the Buy more button. The average price is calculated automatically.',
+  'Beli lagi di tanggal lain? Tekan Tambah pembelian, harga rata-rata dihitung otomatis.': 'Bought again on another date? Press Add purchase, the average price is calculated automatically.',
 }
 export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
