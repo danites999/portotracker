@@ -1,6 +1,7 @@
 // Membangun deret harian (tanggal beli -> hari ini) untuk tiap aset, lalu menjumlahkannya jadi riwayat total.
 import { Data, Kelas, Aset } from './types'
 import { Baris } from './calc'
+import { daftarTrx } from './transaksi'
 
 export type Titik = { t: string; v: number }
 export type Mentah = [string, number][]
@@ -83,11 +84,15 @@ export function totalHarian(d: Data, rows: Record<Kelas, Baris[]>, cache: Cache)
     for (const a of (d[k] || []) as Aset[]) {
       if (!a.tanggal || a.tanggal > today) continue
       const s = seriAset(k, a, cache[kunciSeri(k, a)])
-      const q = jumlahAset(k, a), modal = rows[k].find(r => r.id === a.id)?.modal ?? 0
+      const modal = rows[k].find(r => r.id === a.id)?.modal ?? 0
+      // Riwayat pembelian: jumlah yang dimiliki dan modal bertambah di tiap tanggal beli (properti & deposito = 1 pembelian).
+      const trx = daftarTrx(k, a), totalM = trx.reduce((n, x) => n + x.jumlah * x.harga, 0)
+      const qAt = (t: string) => trx.reduce((n, x) => (x.tanggal <= t ? n + x.jumlah : n), 0)
+      const modalAt = (t: string) => (trx.length && totalM > 0 ? (modal * trx.reduce((n, x) => (x.tanggal <= t ? n + x.jumlah * x.harga : n), 0)) / totalM : modal)
       if (a.tanggal < awal) awal = a.tanggal
-      if (s && s[0].t > a.tanggal) harian(a.tanggal, s[0].t).slice(0, -1).forEach(t => peta.set(t, (peta.get(t) || 0) + modal)) // sebelum data tersedia: sebesar modal
-      if (s) s.forEach(p => peta.set(p.t, (peta.get(p.t) || 0) + (k === 'properti' || k === 'deposito' ? p.v : q * p.v)))
-      else { tanpaData++; harian(a.tanggal, today).forEach(t => peta.set(t, (peta.get(t) || 0) + modal)) }
+      if (s && s[0].t > a.tanggal) harian(a.tanggal, s[0].t).slice(0, -1).forEach(t => peta.set(t, (peta.get(t) || 0) + modalAt(t))) // sebelum data tersedia: sebesar modal
+      if (s) s.forEach(p => peta.set(p.t, (peta.get(p.t) || 0) + (trx.length ? qAt(p.t) * p.v : p.v)))
+      else { tanpaData++; harian(a.tanggal, today).forEach(t => peta.set(t, (peta.get(t) || 0) + modalAt(t))) }
     }
   }
   const seri = harian(awal, today).filter(t => peta.has(t)).map(t => ({ t, v: peta.get(t)! }))
