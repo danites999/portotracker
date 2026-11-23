@@ -4,11 +4,12 @@ import { Lang } from '@/lib/i18n'
 // Palet halaman awal: hijau hutan gelap + emas (nyambung dengan rupiah dan emas), tetap sama di mode terang/gelap.
 export const T = { bg: '#0C2623', panel: '#12352F', garis: '#24514A', teks: '#EEF3EE', redup: '#9DB8B0', emas: '#E6B94A', untung: '#6FD8A6' }
 const ALOK: [string, number, string][] = [['Saham', 38, '#4C8DF6'], ['Crypto', 18, '#F0A53A'], ['Emas', 14, '#E6C34A'], ['Reksadana', 12, '#3DBE8B'], ['Deposito', 10, '#9B7BEA'], ['Properti', 8, '#E5677D']]
-const KELAS: [string, string][] = [['Saham', '#2563eb'], ['Reksadana', '#059669'], ['Crypto', '#d97706'], ['Forex', '#0891b2'], ['Emas', '#ca8a04'], ['Properti', '#be123c'], ['Deposito', '#7c3aed']]
+const KELAS: [string, string][] = [['Saham', '#2563eb'], ['Saham AS & ETF', '#4f46e5'], ['Reksadana', '#059669'], ['Crypto', '#d97706'], ['Forex', '#0891b2'], ['Emas', '#ca8a04'], ['Properti', '#be123c'], ['Deposito', '#7c3aed']]
 const FITUR: [string, string][] = [
   ['Ringkasan tiap aset', 'Lihat harga beli, harga hari ini, untung rugi, dan grafik pergerakannya sejak hari pertama kamu membeli.'],
   ['Berita hari ini di sebelahnya', 'Setiap kelas aset punya panel berita terbaru. Buka satu aset, beritanya ikut menyesuaikan.'],
-  ['Harga diperbarui otomatis', 'Saham IDX, crypto, kurs, dan emas dunia dalam rupiah. Harga saham tertunda sekitar 10-15 menit.'],
+  ['Harga diperbarui otomatis', 'Saham IDX dan AS, ETF, crypto, kurs, dan emas dunia dalam rupiah. Harga saham tertunda sekitar 10-15 menit.'],
+  ['Dividen, kupon, dan sewa ikut dihitung', 'Catat penerimaan dari tiap aset. Hasil investasimu tidak hanya selisih harga, tapi juga uang yang benar-benar masuk.'],
   ['Riwayat total nilai', 'Grafik total portofolio dihitung dari tanggal beli tiap aset, jadi langsung terisi sejak hari pertama.'],
   ['Privat dan sinkron', 'Masuk dengan username, tanpa email. Data tersimpan di akunmu dan bisa dibuka dari HP maupun laptop. Nominal bisa disembunyikan dengan satu tombol.'],
 ]
@@ -48,7 +49,7 @@ export function Awal({ t, lang, setLang, onMasuk, onDaftar, lokal }: { t: (s: st
       <section className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-8 lg:grid-cols-[1.05fr_1fr] lg:pt-14">
         <div>
           <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">{t('Semua investasimu, satu layar.')}</h1>
-          <p className="mt-5 max-w-xl text-lg leading-relaxed" style={{ color: T.redup }}>{t('Pantau saham, reksadana, crypto, forex, emas, properti, dan deposito. Harga terbarunya dalam rupiah, untung rugi dihitung otomatis.')}</p>
+          <p className="mt-5 max-w-xl text-lg leading-relaxed" style={{ color: T.redup }}>{t('Pantau saham Indonesia dan Amerika, ETF, reksadana, crypto, forex, emas, properti, dan deposito. Harga terbarunya dalam rupiah, untung rugi dan dividen dihitung otomatis.')}</p>
           <div className="mt-8">{cta}</div>
           <p className="mt-4 text-sm" style={{ color: T.redup }}>{lokal ? t('Data tersimpan di browser ini.') : t('Tanpa email. Cukup username dan kata sandi.')}</p>
         </div>
@@ -80,7 +81,7 @@ export function Awal({ t, lang, setLang, onMasuk, onDaftar, lokal }: { t: (s: st
 
       <section className="border-y" style={{ borderColor: T.garis }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-6">
-          <p className="text-sm font-medium" style={{ color: T.redup }}>{t('Satu total dari tujuh jenis aset')}</p>
+          <p className="text-sm font-medium" style={{ color: T.redup }}>{t('Satu total dari delapan jenis aset')}</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-medium">{KELAS.map(([n, c]) => <li key={n} className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: c }} />{t(n)}</li>)}</ul>
         </div>
       </section>
