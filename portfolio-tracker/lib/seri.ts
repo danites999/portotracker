@@ -21,11 +21,11 @@ export function harian(dari: string, sampai: string): string[] {
 }
 
 // Aset yang harga historisnya diambil dari /api/riwayat
-export const dariApi = (k: Kelas) => k === 'saham' || k === 'crypto' || k === 'forex' || k === 'emas'
-export const simbolApi = (k: Kelas, a: Aset): string => (k === 'saham' ? a.kode : k === 'crypto' ? a.coinId : k === 'forex' ? a.mata : '')
+export const dariApi = (k: Kelas) => k === 'saham' || k === 'ussaham' || k === 'crypto' || k === 'forex' || k === 'emas'
+export const simbolApi = (k: Kelas, a: Aset): string => (k === 'saham' || k === 'ussaham' ? a.kode : k === 'crypto' ? a.coinId : k === 'forex' ? a.mata : '')
 export const kunciSeri = (k: Kelas, a: Aset) => `${k}|${simbolApi(k, a)}|${a.tanggal}`
 export const jumlahAset = (k: Kelas, a: Aset): number =>
-  k === 'saham' ? a.lembar : k === 'crypto' || k === 'forex' ? a.jumlah : k === 'emas' ? a.gram : k === 'reksa' ? a.unit : 1
+  k === 'saham' ? a.lembar : k === 'crypto' || k === 'forex' || k === 'ussaham' ? a.jumlah : k === 'emas' ? a.gram : k === 'reksa' ? a.unit : 1
 
 // Isi hari tanpa data (akhir pekan/libur) dengan harga terakhir yang diketahui.
 export function isiHari(m: Mentah, dari: string, sampai: string): Titik[] {
@@ -52,12 +52,13 @@ function linear(t0: string, v0: number, t1: string, v1: number, dari: string, sa
 }
 
 // Harga per satuan (atau nilai total untuk properti & deposito) dari tanggal beli sampai hari ini. null = tidak ada data.
-export function seriAset(k: Kelas, a: Aset, c?: Cache[string]): Titik[] | null {
+export function seriAset(k: Kelas, a: Aset, c?: Cache[string], kurs?: number): Titik[] | null {
   const today = hariIni(), dari = a.tanggal
   if (!dari || dari > today) return null
   if (dariApi(k) && !(k === 'emas' && a.hargaManual > 0)) {
     if (!c || c === 'gagal') return null
     const s = isiHari(c.m, dari, today)
+    if (k === 'ussaham') return s.length && kurs ? s.map(p => ({ t: p.t, v: p.v * kurs })) : null // harga USD x kurs terbaru, konsisten dengan modal
     return s.length ? s : null
   }
   if (k === 'emas') return linear(dari, a.hargaBeli, today, a.hargaManual, dari, today)
@@ -78,13 +79,13 @@ export function seriAset(k: Kelas, a: Aset, c?: Cache[string]): Titik[] | null {
 // Riwayat total portofolio dari tanggal beli paling awal sampai hari ini.
 // Aset tanpa data harga historis dihitung sebesar modalnya (garis datar) supaya total tidak terlihat turun.
 export type TitikTotal = Titik & { m: number } // v = total nilai, m = total modal pada hari itu
-export function totalHarian(d: Data, rows: Record<Kelas, Baris[]>, cache: Cache): { seri: TitikTotal[]; tanpaData: number } {
+export function totalHarian(d: Data, rows: Record<Kelas, Baris[]>, cache: Cache, kurs?: number): { seri: TitikTotal[]; tanpaData: number } {
   const peta = new Map<string, number>(), pm = new Map<string, number>(), today = hariIni()
   let awal = today, tanpaData = 0
   for (const k of Object.keys(rows) as Kelas[]) {
-    for (const a of (d[k] || []) as Aset[]) {
+    for (const a of ((d as any)[k] || []) as Aset[]) {
       if (!a.tanggal || a.tanggal > today) continue
-      const s = seriAset(k, a, cache[kunciSeri(k, a)])
+      const s = seriAset(k, a, cache[kunciSeri(k, a)], kurs)
       const modal = rows[k].find(r => r.id === a.id)?.modal ?? 0
       // Riwayat pembelian: jumlah yang dimiliki dan modal bertambah di tiap tanggal beli (properti & deposito = 1 pembelian).
       const trx = daftarTrx(k, a), totalM = trx.reduce((n, x) => n + x.jumlah * x.harga, 0)
