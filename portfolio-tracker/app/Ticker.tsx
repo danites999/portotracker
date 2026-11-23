@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react'
 type Item = { jenis: string; n: string; h: number; p: number }
 
 // Running text harga pasar di bagian bawah layar: ▲ hijau = naik, ▼ merah = turun dibanding penutupan sebelumnya.
-export function Ticker({ saham, mata, t }: { saham: string[]; mata: string[]; t: (s: string) => string }) {
+export function Ticker({ saham, us, mata, t }: { saham: string[]; us: string[]; mata: string[]; t: (s: string) => string }) {
   const [items, setItems] = useState<Item[]>([])
-  const kunci = `${saham.join(',')}|${mata.join(',')}`, loc = t('id-ID')
+  const kunci = `${saham.join(',')}|${us.join(',')}|${mata.join(',')}`, loc = t('id-ID')
   useEffect(() => {
     let on = true
-    const ambil = () => fetch(`/api/ticker?saham=${encodeURIComponent(saham.join(','))}&mata=${encodeURIComponent(mata.join(','))}`).then(r => r.json()).then(j => { if (on && Array.isArray(j.items) && j.items.length) setItems(j.items) }).catch(() => {})
+    const ambil = () => fetch(`/api/ticker?saham=${encodeURIComponent(saham.join(','))}&us=${encodeURIComponent(us.join(','))}&mata=${encodeURIComponent(mata.join(','))}`).then(r => r.json()).then(j => { if (on && Array.isArray(j.items) && j.items.length) setItems(j.items) }).catch(() => {})
     ambil()
     const id = setInterval(ambil, 5 * 60 * 1000)
     return () => { on = false; clearInterval(id) }
@@ -24,7 +24,7 @@ export function Ticker({ saham, mata, t }: { saham: string[]; mata: string[]; t:
           <span key={i} className="inline-flex items-center gap-1.5 px-4">
             <b className="font-semibold">{x.n}</b>
             <span className={naik ? 'text-emerald-500' : turun ? 'text-red-500' : 'text-slate-400'}>{naik ? '▲' : turun ? '▼' : '■'}<span className="sr-only">{naik ? t('naik') : turun ? t('turun') : ''}</span></span>
-            <span className="tabular-nums">{fmt(x.h)}</span>
+            <span className="tabular-nums">{x.jenis === 'us' ? '$' : ''}{fmt(x.h)}</span>
             <span className={`text-xs tabular-nums ${naik ? 'text-emerald-500' : turun ? 'text-red-500' : 'text-slate-400'}`}>{x.p > 0 ? '+' : ''}{x.p.toFixed(2)}%</span>
           </span>
         )
