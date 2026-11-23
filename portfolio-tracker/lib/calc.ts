@@ -1,6 +1,7 @@
 import { Data } from './types'
+import { totalTerima, mataTerima } from './penerimaan'
 export const rp = (n: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: Math.abs(n) < 1000 ? 2 : 0 }).format(n)
-export type Baris = { id: string; nama: string; sub: string; modal: number; nilai: number; beli?: number; kini?: number; info?: string; warn?: boolean; est?: number }
+export type Baris = { id: string; nama: string; sub: string; modal: number; nilai: number; terima?: number; beli?: number; kini?: number; info?: string; warn?: boolean; est?: number }
 const hari = (a: string, b = new Date()) => Math.floor((b.getTime() - new Date(a).getTime()) / 864e5)
 
 export function hitung(d: Data, t: (s: string) => string = s => s) {
@@ -31,5 +32,14 @@ export function hitung(d: Data, t: (s: string) => string = s => s) {
       nilai: a.pokok + a.pokok * a.bunga / 100 * hr / 365 * net, est: a.pokok + a.pokok * a.bunga / 100 * hariTenor / 365 * net,
       info: `${t('Jatuh tempo')} ${jt.toLocaleDateString(t('id-ID'), { day: 'numeric', month: 'short', year: 'numeric' })} (${sisa} ${t('hari lagi')}). ${t('Nilai = pokok + bunga bersih berjalan')}` }
   })
-  return { saham, reksa, crypto, forex, emas, properti, deposito }
+  // Saham AS & ETF: harga dalam USD, nilai dan modal dikonversi dengan kurs USD/IDR terbaru (selisih kurs tidak ikut dihitung).
+  const ussaham: Baris[] = (d.ussaham || []).map(a => { const p = (h.us || {})[a.kode], kurs = h.kurs, modal = a.jumlah * a.hargaBeli * kurs
+    return { id: a.id, nama: a.kode, sub: `${a.jumlah.toLocaleString(t('id-ID'), { maximumFractionDigits: 8 })} ${t('lembar')} · ${t(a.jenis || 'Saham')}`, modal, nilai: p ? a.jumlah * p * kurs : modal, beli: a.hargaBeli * kurs, kini: p ? p * kurs : undefined,
+      info: p ? `US$${p.toLocaleString(t('id-ID'), { maximumFractionDigits: 2 })} × ${t('kurs')} ${rp(kurs)}` : nol, warn: !p } })
+  const hasil = { saham, ussaham, reksa, crypto, forex, emas, properti, deposito }
+  // Penerimaan (dividen, kupon, sewa) ikut dihitung sebagai bagian dari hasil investasi. Penerimaan USD dikonversi dengan kurs terbaru.
+  const asal: Record<string, any[]> = { saham: d.saham, ussaham: d.ussaham || [], reksa: d.reksa, crypto: d.crypto, forex: d.forex || [], emas: d.emas || [], properti: d.properti || [], deposito: d.deposito }
+  ;(Object.keys(hasil) as (keyof typeof hasil)[]).forEach(k => { if (k === 'deposito' || k === 'forex' || k === 'emas') return
+    hasil[k].forEach(r => { const a = asal[k].find(x => x.id === r.id); if (a) r.terima = totalTerima(a) * (mataTerima(k as any, a) === 'USD' ? h.kurs : 1) }) })
+  return hasil
 }
