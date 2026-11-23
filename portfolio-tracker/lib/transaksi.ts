@@ -5,12 +5,12 @@ import { Kelas, Aset } from './types'
 export type Trx = { id: string; tanggal: string; jumlah: number; harga: number }
 
 // Kelas yang bisa dibeli bertahap. Properti dan deposito dibeli sekali, jadi tidak ikut.
-export const BISA: Kelas[] = ['saham', 'reksa', 'crypto', 'forex', 'emas']
+export const BISA: Kelas[] = ['saham', 'ussaham', 'reksa', 'crypto', 'forex', 'emas']
 export const punyaTrx = (k: Kelas) => BISA.includes(k)
 
 // Nama field jumlah (q) dan harga beli (h) pada tiap kelas aset
 export const KUNCI: Record<string, { q: string; h: string }> = {
-  saham: { q: 'lembar', h: 'hargaBeli' }, reksa: { q: 'unit', h: 'navBeli' }, crypto: { q: 'jumlah', h: 'hargaBeli' },
+  saham: { q: 'lembar', h: 'hargaBeli' }, ussaham: { q: 'jumlah', h: 'hargaBeli' }, reksa: { q: 'unit', h: 'navBeli' }, crypto: { q: 'jumlah', h: 'hargaBeli' },
   forex: { q: 'jumlah', h: 'kursBeli' }, emas: { q: 'gram', h: 'hargaBeli' },
 }
 
