@@ -38,6 +38,7 @@ export async function GET(req: Request) {
   const cache = { 'Cache-Control': 's-maxage=1800, stale-while-revalidate=3600' }
   try {
     if (k === 'saham' && /^[A-Za-z0-9]{2,6}$/.test(s)) return NextResponse.json({ seri: await yahoo(`${s.toUpperCase()}.JK`, dari) }, { headers: cache })
+    if (k === 'ussaham' && /^[A-Za-z0-9.-]{1,10}$/.test(s)) return NextResponse.json({ seri: await yahoo(s.toUpperCase().replace('.', '-'), dari) }, { headers: cache })
     if (k === 'indeks' && INDEKS[s]) return NextResponse.json({ seri: await yahoo(INDEKS[s], dari) }, { headers: cache })
     if (k === 'forex' && /^[A-Za-z]{3}$/.test(s)) return NextResponse.json({ seri: await yahoo(`${s.toUpperCase()}IDR=X`, dari) }, { headers: cache })
     if (k === 'crypto' && /^[a-z0-9-]{1,60}$/.test(s)) { const c = await crypto(s, dari); return NextResponse.json(c, { headers: cache }) }
