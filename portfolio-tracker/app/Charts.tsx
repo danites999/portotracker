@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
 import { ringkas } from '@/lib/seri'
 
-export type Jenis = 'saham' | 'indeks' | 'crypto' | 'forex' | 'emas'
+export type Jenis = 'saham' | 'ussaham' | 'indeks' | 'crypto' | 'forex' | 'emas'
 export type Pil = { j: Jenis; s: string; n: string }
 type Hasil = { seri: [string, number][]; potong: boolean }
 
@@ -11,10 +11,10 @@ const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-
 const RENTANG: [string, number, string][] = [['1M', 31, '1 Bulan'], ['3M', 92, '3 Bulan'], ['6M', 183, '6 Bulan'], ['1Y', 366, '1 Tahun'], ['5Y', 1826, '5 Tahun']]
 const INDEKS: [string, string][] = [['JKSE', 'IHSG'], ['GSPC', 'S&P 500'], ['IXIC', 'Nasdaq'], ['N225', 'Nikkei 225']]
 const MATA = ['USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'MYR', 'CNY', 'HKD', 'SAR']
-const JENIS: [Jenis, string, string][] = [['saham', 'Saham', 'BBCA'], ['indeks', 'Indeks', 'JKSE'], ['crypto', 'Crypto', 'bitcoin'], ['forex', 'Forex', 'USD'], ['emas', 'Emas', '']]
+const JENIS: [Jenis, string, string][] = [['saham', 'Saham', 'BBCA'], ['ussaham', 'Saham AS & ETF', 'AAPL'], ['indeks', 'Indeks', 'JKSE'], ['crypto', 'Crypto', 'bitcoin'], ['forex', 'Forex', 'USD'], ['emas', 'Emas', '']]
 const POPULER: Pil[] = [
   { j: 'indeks', s: 'JKSE', n: 'IHSG' }, { j: 'saham', s: 'BBCA', n: 'BBCA' }, { j: 'saham', s: 'BBRI', n: 'BBRI' }, { j: 'saham', s: 'BMRI', n: 'BMRI' }, { j: 'saham', s: 'BBNI', n: 'BBNI' },
-  { j: 'saham', s: 'TLKM', n: 'TLKM' }, { j: 'saham', s: 'ASII', n: 'ASII' }, { j: 'emas', s: '', n: 'Emas' }, { j: 'forex', s: 'USD', n: 'USD/IDR' }, { j: 'crypto', s: 'bitcoin', n: 'Bitcoin' }, { j: 'crypto', s: 'ethereum', n: 'Ethereum' },
+  { j: 'saham', s: 'TLKM', n: 'TLKM' }, { j: 'saham', s: 'ASII', n: 'ASII' }, { j: 'ussaham', s: 'AAPL', n: 'AAPL' }, { j: 'ussaham', s: 'NVDA', n: 'NVDA' }, { j: 'ussaham', s: 'VOO', n: 'VOO' }, { j: 'ussaham', s: 'QQQ', n: 'QQQ' }, { j: 'emas', s: '', n: 'Emas' }, { j: 'forex', s: 'USD', n: 'USD/IDR' }, { j: 'crypto', s: 'bitcoin', n: 'Bitcoin' }, { j: 'crypto', s: 'ethereum', n: 'Ethereum' },
 ]
 
 export function Charts({ t, punya }: { t: (s: string) => string; punya: Pil[] }) {
@@ -44,6 +44,7 @@ export function Charts({ t, punya }: { t: (s: string) => string; punya: Pil[] })
   const cari = () => {
     const x = input.trim()
     if (j === 'saham' && /^[A-Za-z0-9]{2,6}$/.test(x)) setS(x.toUpperCase())
+    if (j === 'ussaham' && /^[A-Za-z0-9.-]{1,10}$/.test(x)) setS(x.toUpperCase())
     if (j === 'crypto' && /^[A-Za-z0-9-]{1,60}$/.test(x)) setS(x.toLowerCase())
   }
   const ketik = (v: string) => {
@@ -51,8 +52,8 @@ export function Charts({ t, punya }: { t: (s: string) => string; punya: Pil[] })
     if (j === 'crypto' && v.length > 1) fetch(`/api/crypto?q=${encodeURIComponent(v)}`).then(x => x.json()).then(x => setOpsi(x.coins || [])).catch(() => {})
   }
 
-  const idr = j !== 'indeks'
-  const fmt = (n: number) => { const x = n.toLocaleString(loc, { maximumFractionDigits: n < 1 ? 6 : n < 1000 ? 2 : 0 }); return idr ? `Rp ${x}` : n.toLocaleString(loc, { maximumFractionDigits: 2 }) }
+  const usd = j === 'ussaham', idr = j !== 'indeks' && !usd
+  const fmt = (n: number) => { const x = n.toLocaleString(loc, { maximumFractionDigits: n < 1 ? 6 : n < 1000 ? 2 : 0 }); return usd ? `US$ ${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : idr ? `Rp ${x}` : n.toLocaleString(loc, { maximumFractionDigits: 2 }) }
   const nama = j === 'indeks' ? INDEKS.find(x => x[0] === s)?.[1] || s : j === 'forex' ? `${s}/IDR` : j === 'emas' ? t('Emas (per gram)') : s.toUpperCase()
   const tgl = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
   const tick = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(loc, hari > 200 ? { month: 'short', year: '2-digit', timeZone: 'UTC' } : { day: 'numeric', month: 'short', timeZone: 'UTC' })
@@ -69,9 +70,9 @@ export function Charts({ t, punya }: { t: (s: string) => string; punya: Pil[] })
       <div className={`${card} space-y-3`}>
         <div><h2 className="text-lg font-semibold">{t('Charts')}</h2><p className="text-sm text-slate-500">{t('Lihat pergerakan harga saham, indeks, crypto, kurs, dan emas.')}</p></div>
         <div className="flex flex-wrap gap-1.5">{JENIS.map(([id, n]) => <button key={id} className={seg(j === id)} onClick={() => pilihJenis(id)}>{t(n)}</button>)}</div>
-        {(j === 'saham' || j === 'crypto') && (
+        {(j === 'saham' || j === 'ussaham' || j === 'crypto') && (
           <div className="flex max-w-md gap-2">
-            <input list={j === 'crypto' ? 'coins-chart' : undefined} placeholder={j === 'saham' ? t('Kode saham (mis. BBCA)') : t('ID coin CoinGecko (mis. bitcoin)')} value={input} onChange={e => ketik(e.target.value)} onKeyDown={e => e.key === 'Enter' && cari()} />
+            <input list={j === 'crypto' ? 'coins-chart' : undefined} placeholder={j === 'saham' ? t('Kode saham (mis. BBCA)') : j === 'ussaham' ? t('Kode saham/ETF AS (mis. AAPL, VOO)') : t('ID coin CoinGecko (mis. bitcoin)')} value={input} onChange={e => ketik(e.target.value)} onKeyDown={e => e.key === 'Enter' && cari()} />
             <button className="btn-p" onClick={cari}>{t('Tampilkan')}</button>
             <datalist id="coins-chart">{opsi.map(c => <option key={c.id} value={c.id}>{c.name} ({c.symbol})</option>)}</datalist>
           </div>
