@@ -3,7 +3,7 @@ import { Data } from './types'
 import { sb } from './supabase'
 import { terapkan } from './transaksi'
 const KEY = 'portfolio-tracker-v1'
-export const kosong = (): Data => ({ saham: [], reksa: [], crypto: [], forex: [], emas: [], properti: [], deposito: [], riwayat: [], harga: { saham: {}, crypto: {}, forex: {}, emas: 0, kurs: 16000, waktu: {} } })
+export const kosong = (): Data => ({ saham: [], ussaham: [], reksa: [], crypto: [], forex: [], emas: [], properti: [], deposito: [], riwayat: [], harga: { saham: {}, us: {}, crypto: {}, forex: {}, emas: 0, kurs: 16000, waktu: {} } })
 const gabung = (j: any): Data => { const k = kosong(); return { ...k, ...j, harga: { ...k.harga, ...(j.harga || {}) } } }
 export function muat(): Data { try { const r = localStorage.getItem(KEY); return r ? gabung(JSON.parse(r)) : kosong() } catch { return kosong() } }
 export function simpan(d: Data) { try { localStorage.setItem(KEY, JSON.stringify(d)) } catch {} }
@@ -19,7 +19,8 @@ export async function impor(f: File): Promise<Data> {
 }
 const id = () => Math.random().toString(36).slice(2) + Date.now().toString(36)
 export const contoh = (): Data => ({ ...kosong(),
-  saham: [terapkan('saham', { id: id(), kode: 'BBCA' }, [{ id: id(), tanggal: '2026-03-10', jumlah: 500, harga: 8800 }, { id: id(), tanggal: '2026-04-20', jumlah: 500, harga: 9200 }]), { id: id(), kode: 'TLKM', lembar: 2000, hargaBeli: 3000, tanggal: '2026-05-02' }],
+  saham: [terapkan('saham', { id: id(), kode: 'BBCA', penerimaan: [{ id: id(), tanggal: '2026-06-15', jumlah: 150000, jenis: 'Dividen' }] }, [{ id: id(), tanggal: '2026-03-10', jumlah: 500, harga: 8800 }, { id: id(), tanggal: '2026-04-20', jumlah: 500, harga: 9200 }]), { id: id(), kode: 'TLKM', lembar: 2000, hargaBeli: 3000, tanggal: '2026-05-02' }],
+  ussaham: [terapkan('ussaham', { id: id(), kode: 'VOO', jenis: 'ETF' }, [{ id: id(), tanggal: '2026-05-05', jumlah: 1.5, harga: 480 }, { id: id(), tanggal: '2026-08-12', jumlah: 1, harga: 520 }]), { id: id(), kode: 'AAPL', jenis: 'Saham', jumlah: 2, hargaBeli: 200, tanggal: '2026-06-10' }],
   reksa: [{ id: id(), nama: 'Contoh Pasar Uang', jenis: 'Pasar uang', unit: 5000, navBeli: 1500, tanggal: '2026-02-01', navTerbaru: 1520, tglNav: new Date().toISOString().slice(0, 10) }],
   crypto: [{ id: id(), coinId: 'bitcoin', simbol: 'BTC', jumlah: 0.01, hargaBeli: 60000, mata: 'USD', tanggal: '2026-04-01' }, { id: id(), coinId: 'ethereum', simbol: 'ETH', jumlah: 0.2, hargaBeli: 40000000, mata: 'IDR', tanggal: '2026-04-15' }],
   forex: [{ id: id(), mata: 'USD', jumlah: 1000, kursBeli: 16000, tanggal: '2026-06-01' }, { id: id(), mata: 'SGD', jumlah: 500, kursBeli: 12000, tanggal: '2026-07-01' }],
