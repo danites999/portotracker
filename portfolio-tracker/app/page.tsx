@@ -13,6 +13,7 @@ import { Charts, Pil } from './Charts'
 import { Rebalancing } from './Rebalancing'
 import { Performa } from './Performa'
 import { TemaToggle } from './tema'
+import { PanelFitur, FiturId } from './PanelFitur'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
 import { keEmail, namaDari } from '@/lib/akun'
@@ -536,6 +537,8 @@ export default function Home() {
   const [ok, setOk] = useState(false)
   const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
+  const [rail, setRail] = useState(true)
+  const headerRef = useRef<HTMLElement>(null)
   const [layar, setLayar] = useState<'awal' | 'masuk'>('awal')
   const [daftarAwal, setDaftarAwal] = useState(false)
   const [formTrx, setFormTrx] = useState<{ k: Kelas; aid: string; tid?: string } | null>(null)
@@ -561,9 +564,11 @@ export default function Home() {
   const [cek, setCek] = useState(!!sb)
   const t = useMemo(() => tr(lang), [lang])
   const pilihBahasa = (l: Lang) => { setLang(l); localStorage.setItem('pt-lang', l) }
+  const bukaRail = (b: boolean) => { setRail(b); try { localStorage.setItem('pt-rail', b ? '1' : '0') } catch {} }
   const uid = user?.id
   useEffect(() => {
     setHide(localStorage.getItem('pt-hide') === '1')
+    setRail(localStorage.getItem('pt-rail') !== '0')
     setLang(localStorage.getItem('pt-lang') === 'en' ? 'en' : 'id')
     if (!sb) { setD(muat()); setOk(true); return }
     sb.auth.getSession().then(({ data }) => { setUser(data.session?.user ?? null); setCek(false) })
@@ -713,8 +718,8 @@ export default function Home() {
   if ((!sb || !user) && layar === 'awal') return <Awal t={t} lang={lang} setLang={pilihBahasa} lokal={!sb} onMasuk={() => { setDaftarAwal(false); setLayar('masuk') }} onDaftar={() => { setDaftarAwal(true); setLayar('masuk') }} />
   if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} daftarAwal={daftarAwal} onKembali={() => setLayar('awal')} />
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-20">
-      <header className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-stone-50/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+    <div className="mx-auto max-w-7xl px-4 pb-20">
+      <header ref={headerRef} className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-stone-50/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div><h1 className="text-lg font-semibold leading-tight">{t('Portfolio Tracker')}<sup className="text-[10px]">™</sup></h1><p className="text-[11px] leading-tight text-slate-500">{KREDIT}</p></div>
           <div className="flex flex-wrap items-center gap-2">
@@ -730,75 +735,77 @@ export default function Home() {
         </div>
         <nav className="mt-3 flex flex-wrap items-center gap-2">
           <button onClick={() => { setTab('ringkasan'); setFokus(null) }} className={`whitespace-nowrap rounded-lg border border-emerald-700 px-3 py-1.5 text-sm font-medium ${tab === 'ringkasan' ? 'bg-emerald-700 text-white' : 'text-emerald-700 dark:text-emerald-500'}`}>{t('Ringkasan total')}</button>
-          {([['investasi', 'Investasi'], ['charts', 'Charts'], ['rebalancing', 'Rebalancing'], ['performa', 'Performa vs Benchmark'], ['kalender', 'Kalender ekonomi']] as const).map(([id, nama]) => {
-            const aktif = id === 'investasi' ? !!kelasTab : tab === id
-            return <button key={id} onClick={() => { setFokus(null); if (id === 'investasi') { if (!kelasTab) pilih(kelasAkhir) } else setTab(id) }} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${aktif ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400'}`}>{t(nama)}</button>
-          })}
+          <button onClick={() => { setFokus(null); if (!kelasTab) pilih(kelasAkhir) }} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${kelasTab ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400'}`}>{t('Investasi')}</button>
         </nav>
         {kelasTab && <nav className="mt-2 flex gap-1 overflow-x-auto border-t border-slate-200 pt-2 dark:border-slate-800">{KELAS.map(k => <button key={k} onClick={() => pilih(k)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === k ? 'bg-slate-200 font-medium dark:bg-slate-700' : 'text-slate-600 dark:text-slate-400'}`}>{t(NAMA[k])}</button>)}</nav>}
       </header>
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{msg}</p>}
       {sb && butuhKode && !kodeModal && <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{t('Akunmu belum punya kode pemulihan. Tanpa itu, kata sandi yang lupa tidak bisa dipulihkan.')}<button className="font-medium underline" onClick={() => setKodeModal('tawar')}>{t('Buat sekarang')}</button></p>}
 
-      {tab === 'ringkasan' ? (
-        <main className="mt-4 space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className={card}><p className="text-sm text-slate-500">{t('Total nilai')}</p><p className="text-2xl font-semibold">{M(total)}</p></div>
-            <div className={card}><p className="text-sm text-slate-500">{t('Total modal')}</p><p className="text-2xl font-semibold">{M(modal)}</p></div>
-            <div className={card}><p className="text-sm text-slate-500">{t('Total hasil')}</p><p className={`text-2xl font-semibold ${warna(hasil)}`}>{M(hasil)}</p><p className={`text-sm ${warna(hasil)}`}>{pct(modal ? (hasil / modal) * 100 : 0)}</p><p className="mt-1 text-xs text-slate-500">{t('Selisih harga')} {M(pl)} · {t('Penerimaan')} {M(terimaTotal)}</p></div>
-          </div>
-          <div className={card}><h2 className="mb-2 font-medium">{t('Riwayat nilai total')}</h2>
-            {grafik.length > 1 ? <div className="h-72"><ResponsiveContainer><ComposedChart data={grafik}>
-              <XAxis dataKey="t" tick={{ fontSize: 11 }} tickFormatter={tickTotal} minTickGap={40} /><YAxis hide domain={['auto', 'auto']} />
-              <Tooltip formatter={(v: number) => M(v)} labelFormatter={(x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(t('id-ID'), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })} />
-              <Legend verticalAlign="top" height={28} iconType="plainline" />
-              <Area name={t('Total nilai')} dataKey="v" type="monotone" stroke="#059669" strokeWidth={2} fill="#05966926" />
-              <Line name={t('Total modal')} dataKey="m" type="stepAfter" stroke="#64748b" strokeWidth={2} strokeDasharray="5 4" dot={false} connectNulls />
-            </ComposedChart></ResponsiveContainer></div>
-              : <p className="py-10 text-center text-sm text-slate-500">{t('Grafik muncul setelah aplikasi dibuka di lebih dari satu hari.')}</p>}
-            {grafik.length > 1 && <p className="mt-2 text-xs text-slate-500">{t('Garis total nilai di atas garis total modal berarti untung; di bawahnya berarti rugi.')}</p>}
-            {pakaiHist && <p className="mt-1 text-xs text-slate-500">{t('Dihitung dari tanggal beli tiap aset memakai harga historis.')}{hist.tanpaData > 0 && ` ${t('Aset tanpa data harga historis dihitung sebesar modal.')}`}{butuh.some(n => !cache[n.key]) && ` ${t('Memuat riwayat harga…')}`}</p>}
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className={card}><h2 className="mb-2 font-medium">{t('Alokasi aset')}</h2>
-              {donut.length ? <><div className="h-52"><ResponsiveContainer><PieChart><Pie data={donut} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>{donut.map(x => <Cell key={x.k} fill={WARNA[x.k]} />)}</Pie><Tooltip formatter={(v: number) => M(v)} /></PieChart></ResponsiveContainer></div>
-                <ul className="mt-2 space-y-1 text-sm">{donut.map(x => <li key={x.k} className="flex justify-between"><span><i className="mr-2 inline-block h-2.5 w-2.5 rounded-full" style={{ background: WARNA[x.k] }} />{x.name}</span><span>{((x.value / total) * 100).toFixed(1)}%</span></li>)}</ul></>
-                : <p className="py-10 text-center text-sm text-slate-500">{t('Belum ada data. Tambahkan aset atau muat data contoh di bawah.')}</p>}
+      <div className={`mt-4 grid gap-4 ${rail ? 'lg:grid-cols-[minmax(0,1fr)_12rem]' : 'lg:grid-cols-[minmax(0,1fr)_3.5rem]'}`}>
+        <div className="min-w-0">
+        {tab === 'ringkasan' ? (
+          <main className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className={card}><p className="text-sm text-slate-500">{t('Total nilai')}</p><p className="text-2xl font-semibold">{M(total)}</p></div>
+              <div className={card}><p className="text-sm text-slate-500">{t('Total modal')}</p><p className="text-2xl font-semibold">{M(modal)}</p></div>
+              <div className={card}><p className="text-sm text-slate-500">{t('Total hasil')}</p><p className={`text-2xl font-semibold ${warna(hasil)}`}>{M(hasil)}</p><p className={`text-sm ${warna(hasil)}`}>{pct(modal ? (hasil / modal) * 100 : 0)}</p><p className="mt-1 text-xs text-slate-500">{t('Selisih harga')} {M(pl)} · {t('Penerimaan')} {M(terimaTotal)}</p></div>
             </div>
-            <div className={card}><h2 className="mb-2 font-medium">{t('Per kelas aset')}</h2>
-            <ul className="divide-y divide-slate-200 text-sm dark:divide-slate-800">{KELAS.map(k => <li key={k} className="flex justify-between py-2"><span>{t(NAMA[k])} <span className="text-xs text-slate-500">({ket[k]})</span></span><span>{M(sum(k, 'nilai'))}</span></li>)}</ul>
-          </div>
-          </div>
-          <div className={card}><h2 className="mb-2 font-medium">{t('Data dan backup')}</h2>
-            <div className="flex flex-wrap gap-2">
-              <button className="btn" onClick={() => ekspor(d)}>{t('Ekspor JSON')}</button>
-              <button className="btn" onClick={() => fileRef.current?.click()}>{t('Impor JSON')}</button>
-              <button className="btn" onClick={() => confirm(t('Ganti semua data dengan data contoh?')) && setD(contoh())}>{t('Muat data contoh')}</button>
-              <button className="btn text-red-600" onClick={() => confirm(t('Hapus semua data portofolio? Ekspor dulu jika perlu.')) && setD(kosong())}>{t('Hapus semua data')}</button>
-              <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; try { setD(await impor(f)); setMsg('') } catch (x: any) { setMsg(x.message || t('Gagal membaca file')) } e.target.value = '' }} />
+            <div className={card}><h2 className="mb-2 font-medium">{t('Riwayat nilai total')}</h2>
+              {grafik.length > 1 ? <div className="h-72"><ResponsiveContainer><ComposedChart data={grafik}>
+                <XAxis dataKey="t" tick={{ fontSize: 11 }} tickFormatter={tickTotal} minTickGap={40} /><YAxis hide domain={['auto', 'auto']} />
+                <Tooltip formatter={(v: number) => M(v)} labelFormatter={(x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(t('id-ID'), { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })} />
+                <Legend verticalAlign="top" height={28} iconType="plainline" />
+                <Area name={t('Total nilai')} dataKey="v" type="monotone" stroke="#059669" strokeWidth={2} fill="#05966926" />
+                <Line name={t('Total modal')} dataKey="m" type="stepAfter" stroke="#64748b" strokeWidth={2} strokeDasharray="5 4" dot={false} connectNulls />
+              </ComposedChart></ResponsiveContainer></div>
+                : <p className="py-10 text-center text-sm text-slate-500">{t('Grafik muncul setelah aplikasi dibuka di lebih dari satu hari.')}</p>}
+              {grafik.length > 1 && <p className="mt-2 text-xs text-slate-500">{t('Garis total nilai di atas garis total modal berarti untung; di bawahnya berarti rugi.')}</p>}
+              {pakaiHist && <p className="mt-1 text-xs text-slate-500">{t('Dihitung dari tanggal beli tiap aset memakai harga historis.')}{hist.tanpaData > 0 && ` ${t('Aset tanpa data harga historis dihitung sebesar modal.')}`}{butuh.some(n => !cache[n.key]) && ` ${t('Memuat riwayat harga…')}`}</p>}
             </div>
-            <p className="mt-2 text-xs text-slate-500">{t(sb ? 'Data tersimpan di akunmu. Ekspor JSON tetap berguna sebagai cadangan.' : 'Data tersimpan hanya di browser ini. Ekspor secara berkala sebagai cadangan.')}</p>
-          </div>
-        </main>
-      ) : tab === 'charts' ? (
-        <main className="mt-4"><Charts t={t} punya={punyaChart} /></main>
-      ) : tab === 'rebalancing' ? (
-        <main className="mt-4"><Rebalancing t={t} M={M} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} target={d.target || {}} nama={NAMA} warna={WARNA}
-          onTarget={(k, v) => setD(p => { const tg = { ...(p.target || {}) }; if (v == null) delete tg[k]; else tg[k] = v; return { ...p, target: tg } })} onSemua={v => setD(p => ({ ...p, target: v }))} /></main>
-      ) : tab === 'performa' ? (
-        <main className="mt-4"><Performa t={t} seri={seriPenuh} income={incomeHarian} memuat={butuh.some(n => !cache[n.key])} /></main>
-      ) : tab === 'kalender' ? (
-        <main className="mt-4"><Kalender t={t} /></main>
-      ) : (
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <main className="min-w-0 space-y-3">
-            <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">{t(NAMA[tab])}</h2><p className="text-sm text-slate-500">{t('Nilai')} {M(sum(tab, 'nilai'))} · {t('Modal')} {M(sum(tab, 'modal'))}</p></div><button className="btn-p" onClick={() => setForm({ k: tab })}>{t('Tambah')}</button></div>
-            {fAset && fBaris && <RingkasanAset k={tab} a={fAset} r={fBaris} cache={cache} M={M} t={t} onTambahTrx={() => setFormTrx({ k: tab, aid: fAset.id })} onUbahTrx={tid => setFormTrx({ k: tab, aid: fAset.id, tid })} onHapusTrx={tid => hapusTrx(tab, fAset.id, tid)} kurs={d.harga.kurs} onTambahTerima={() => setFormTerima({ k: tab, aid: fAset.id })} onUbahTerima={tid => setFormTerima({ k: tab, aid: fAset.id, tid })} onHapusTerima={tid => hapusTerima(tab, fAset.id, tid)} />}
-            <Daftar t={t} rows={rows[tab]} M={M} onEdit={id => setForm({ k: tab, id })} onDel={hapus(tab)} fokus={fAset ? fokus : null} onFokus={id => setFokus(fokus === id ? null : id)} bisaBeli={punyaTrx(tab)} onBeli={id => setFormTrx({ k: tab, aid: id })} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className={card}><h2 className="mb-2 font-medium">{t('Alokasi aset')}</h2>
+                {donut.length ? <><div className="h-52"><ResponsiveContainer><PieChart><Pie data={donut} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>{donut.map(x => <Cell key={x.k} fill={WARNA[x.k]} />)}</Pie><Tooltip formatter={(v: number) => M(v)} /></PieChart></ResponsiveContainer></div>
+                  <ul className="mt-2 space-y-1 text-sm">{donut.map(x => <li key={x.k} className="flex justify-between"><span><i className="mr-2 inline-block h-2.5 w-2.5 rounded-full" style={{ background: WARNA[x.k] }} />{x.name}</span><span>{((x.value / total) * 100).toFixed(1)}%</span></li>)}</ul></>
+                  : <p className="py-10 text-center text-sm text-slate-500">{t('Belum ada data. Tambahkan aset atau muat data contoh di bawah.')}</p>}
+              </div>
+              <div className={card}><h2 className="mb-2 font-medium">{t('Per kelas aset')}</h2>
+              <ul className="divide-y divide-slate-200 text-sm dark:divide-slate-800">{KELAS.map(k => <li key={k} className="flex justify-between py-2"><span>{t(NAMA[k])} <span className="text-xs text-slate-500">({ket[k]})</span></span><span>{M(sum(k, 'nilai'))}</span></li>)}</ul>
+            </div>
+            </div>
+            <div className={card}><h2 className="mb-2 font-medium">{t('Data dan backup')}</h2>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn" onClick={() => ekspor(d)}>{t('Ekspor JSON')}</button>
+                <button className="btn" onClick={() => fileRef.current?.click()}>{t('Impor JSON')}</button>
+                <button className="btn" onClick={() => confirm(t('Ganti semua data dengan data contoh?')) && setD(contoh())}>{t('Muat data contoh')}</button>
+                <button className="btn text-red-600" onClick={() => confirm(t('Hapus semua data portofolio? Ekspor dulu jika perlu.')) && setD(kosong())}>{t('Hapus semua data')}</button>
+                <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={async e => { const f = e.target.files?.[0]; if (!f) return; try { setD(await impor(f)); setMsg('') } catch (x: any) { setMsg(x.message || t('Gagal membaca file')) } e.target.value = '' }} />
+              </div>
+              <p className="mt-2 text-xs text-slate-500">{t(sb ? 'Data tersimpan di akunmu. Ekspor JSON tetap berguna sebagai cadangan.' : 'Data tersimpan hanya di browser ini. Ekspor secara berkala sebagai cadangan.')}</p>
+            </div>
           </main>
-          <Berita q={topik(tab, lang, fAset)} label={fAset && fBaris ? `${fBaris.nama} (${t(NAMA[tab])})` : `${t(NAMA[tab])} · ${t('berita umum')}`} lang={lang} t={t} />
+        ) : tab === 'charts' ? (
+          <main><Charts t={t} punya={punyaChart} /></main>
+        ) : tab === 'rebalancing' ? (
+          <main><Rebalancing t={t} M={M} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} target={d.target || {}} nama={NAMA} warna={WARNA}
+            onTarget={(k, v) => setD(p => { const tg = { ...(p.target || {}) }; if (v == null) delete tg[k]; else tg[k] = v; return { ...p, target: tg } })} onSemua={v => setD(p => ({ ...p, target: v }))} /></main>
+        ) : tab === 'performa' ? (
+          <main><Performa t={t} seri={seriPenuh} income={incomeHarian} memuat={butuh.some(n => !cache[n.key])} /></main>
+        ) : tab === 'kalender' ? (
+          <main><Kalender t={t} /></main>
+        ) : (
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+            <main className="min-w-0 space-y-3">
+              <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">{t(NAMA[tab])}</h2><p className="text-sm text-slate-500">{t('Nilai')} {M(sum(tab, 'nilai'))} · {t('Modal')} {M(sum(tab, 'modal'))}</p></div><button className="btn-p" onClick={() => setForm({ k: tab })}>{t('Tambah')}</button></div>
+              {fAset && fBaris && <RingkasanAset k={tab} a={fAset} r={fBaris} cache={cache} M={M} t={t} onTambahTrx={() => setFormTrx({ k: tab, aid: fAset.id })} onUbahTrx={tid => setFormTrx({ k: tab, aid: fAset.id, tid })} onHapusTrx={tid => hapusTrx(tab, fAset.id, tid)} kurs={d.harga.kurs} onTambahTerima={() => setFormTerima({ k: tab, aid: fAset.id })} onUbahTerima={tid => setFormTerima({ k: tab, aid: fAset.id, tid })} onHapusTerima={tid => hapusTerima(tab, fAset.id, tid)} />}
+              <Daftar t={t} rows={rows[tab]} M={M} onEdit={id => setForm({ k: tab, id })} onDel={hapus(tab)} fokus={fAset ? fokus : null} onFokus={id => setFokus(fokus === id ? null : id)} bisaBeli={punyaTrx(tab)} onBeli={id => setFormTrx({ k: tab, aid: id })} />
+            </main>
+            <Berita q={topik(tab, lang, fAset)} label={fAset && fBaris ? `${fBaris.nama} (${t(NAMA[tab])})` : `${t(NAMA[tab])} · ${t('berita umum')}`} lang={lang} t={t} />
+          </div>
+        )}
         </div>
-      )}
+        <PanelFitur t={t} aktif={tab} onPilih={(id: FiturId) => { setFokus(null); setTab(id) }} buka={rail} onBuka={bukaRail} headerRef={headerRef} />
+      </div>
       {kodeModal && <ModalKode t={t} mode={kodeModal} kode={kodePulih} err={errKode} butuh={butuhKode} username={namaDari(user?.email)} onBuat={buatKode} onTutup={() => { setKodeModal(null); setKodePulih(''); setErrKode('') }} />}
       {pulihEmail && <SandiBaru t={t} onSelesai={() => setPulihEmail(false)} />}
       {formTerima && (() => { const a = d[formTerima.k].find(x => x.id === formTerima.aid); return a ? <FormTerima k={formTerima.k} a={a} awal={formTerima.tid ? daftarTerima(a).find(x => x.id === formTerima.tid) : undefined} t={t} onSave={simpanTerima} onClose={() => setFormTerima(null)} /> : null })()}
