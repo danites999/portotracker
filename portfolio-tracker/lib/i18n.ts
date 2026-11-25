@@ -108,5 +108,6 @@ const en: Record<string, string> = {
   'Indeks asing dalam mata uang aslinya (belum dikonversi ke rupiah). Saham AS di portofolio juga dihitung tanpa selisih kurs, jadi cocok dibandingkan dengan S&P 500 atau Nasdaq.': 'Foreign indices are in their original currency (not converted to rupiah). US stocks in the portfolio are also valued without currency moves, so they compare fairly with the S&P 500 or Nasdaq.',
   'S&P 500 adalah indeks, bukan produk yang bisa dibeli langsung. Pilih ETF yang mengikutinya, mis. VOO, SPY, atau IVV.': 'The S&P 500 is an index, not something you can buy directly. Pick an ETF that tracks it, e.g. VOO, SPY or IVV.',
   'Nasdaq adalah indeks. Pilih ETF yang mengikutinya, mis. QQQ.': 'Nasdaq is an index. Pick an ETF that tracks it, e.g. QQQ.', 'Dow Jones adalah indeks. Pilih ETF yang mengikutinya, mis. DIA.': 'The Dow Jones is an index. Pick an ETF that tracks it, e.g. DIA.',
+  'Fitur & alat': 'Tools & features', 'Lipat panel fitur': 'Collapse tools panel', 'Buka panel fitur': 'Expand tools panel',
 }
 export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
