@@ -9,7 +9,7 @@ type Hasil = { seri: [string, number][]; potong: boolean }
 
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 const RENTANG: [string, number, string][] = [['1M', 31, '1 Bulan'], ['3M', 92, '3 Bulan'], ['6M', 183, '6 Bulan'], ['1Y', 366, '1 Tahun'], ['5Y', 1826, '5 Tahun']]
-const INDEKS: [string, string][] = [['JKSE', 'IHSG'], ['GSPC', 'S&P 500'], ['IXIC', 'Nasdaq'], ['N225', 'Nikkei 225']]
+const INDEKS: [string, string][] = [['JKSE', 'IHSG'], ['GSPC', 'S&P 500'], ['IXIC', 'Nasdaq'], ['DJI', 'Dow Jones'], ['N225', 'Nikkei 225'], ['HSI', 'Hang Seng']]
 const MATA = ['USD', 'EUR', 'SGD', 'JPY', 'GBP', 'AUD', 'MYR', 'CNY', 'HKD', 'SAR']
 const JENIS: [Jenis, string, string][] = [['saham', 'Saham', 'BBCA'], ['ussaham', 'Saham AS & ETF', 'AAPL'], ['indeks', 'Indeks', 'JKSE'], ['crypto', 'Crypto', 'bitcoin'], ['forex', 'Forex', 'USD'], ['emas', 'Emas', '']]
 const POPULER: Pil[] = [
