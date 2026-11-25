@@ -16,3 +16,10 @@ input, select { @apply w-full rounded-lg border border-slate-300 bg-white px-3 p
 .ticker:hover .ticker-jalan { animation-play-state: paused; }
 @keyframes ticker-geser { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .ticker { overflow-x: auto; } .ticker-jalan { animation: none; } }
+
+/* Mode gelap: grafik (recharts) mengikuti tema */
+.dark .recharts-default-tooltip { background-color: #0f172a !important; border-color: #334155 !important; }
+.dark .recharts-tooltip-label, .dark .recharts-tooltip-item { color: #e2e8f0 !important; }
+.dark .recharts-cartesian-axis-tick-value { fill: #94a3b8; }
+.dark .recharts-legend-item-text { color: #cbd5e1 !important; }
+.dark .recharts-cartesian-grid line { stroke: #334155; }
