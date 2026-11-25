@@ -42,7 +42,7 @@ export function Performa({ t, seri, income, memuat }: { t: (s: string) => string
 
   const bench = pilih.map((b, i) => { const e = cache[kunci(b)]; return { ...b, warna: WARNA[i % WARNA.length], status: !e ? 'muat' : e === 'gagal' ? 'gagal' : 'ok', peta: e && e !== 'gagal' ? seriBenchmark(e.m, port.mulaiEfektif, today) : new Map<string, number>(), potong: !!(e && e !== 'gagal' && e.potong) } })
   const gab = useMemo(() => gabungPerforma(port, bench.filter(b => b.status === 'ok').map(b => ({ id: b.id, peta: b.peta }))), [port, JSON.stringify(bench.map(b => [b.id, b.status, b.peta.size]))])
-  const data = ringkas(gab.data, 400)
+  const data = ringkas(gab.data as (Record<string, any> & { t: string })[], 400)
 
   const toggle = (b: Bench) => setPilih(p => (p.some(x => x.id === b.id) ? p.filter(x => x.id !== b.id) : p.length >= 3 ? p : [...p, b]))
   const tambahKu = () => {
