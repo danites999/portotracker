@@ -14,6 +14,8 @@ import { Rebalancing } from './Rebalancing'
 import { Performa } from './Performa'
 import { TemaToggle } from './tema'
 import { PanelFitur, FiturId } from './PanelFitur'
+import { Analisis } from './Analisis'
+import { KalkulatorForex } from './KalkulatorForex'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
 import { keEmail, namaDari } from '@/lib/akun'
@@ -535,7 +537,7 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
 export default function Home() {
   const [d, setD] = useState<Data>(kosong())
   const [ok, setOk] = useState(false)
-  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | Kelas>('ringkasan')
+  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | 'analisis' | 'kalkulator' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
   const [rail, setRail] = useState(true)
   const headerRef = useRef<HTMLElement>(null)
@@ -714,6 +716,8 @@ export default function Home() {
     return l.filter((x, i) => l.findIndex(y => y.j === x.j && y.s === x.s) === i)
   }, [d.saham, d.ussaham, d.crypto, d.forex, d.emas])
 
+  const asetDatar = useMemo(() => KELAS.flatMap(k => rows[k].map(r => ({ nama: r.nama, k, nilai: r.nilai }))), [rows])
+
   if (sb && cek) return null
   if ((!sb || !user) && layar === 'awal') return <Awal t={t} lang={lang} setLang={pilihBahasa} lokal={!sb} onMasuk={() => { setDaftarAwal(false); setLayar('masuk') }} onDaftar={() => { setDaftarAwal(true); setLayar('masuk') }} />
   if (sb && !user) return <Masuk t={t} lang={lang} setLang={pilihBahasa} daftarAwal={daftarAwal} onKembali={() => setLayar('awal')} />
@@ -742,7 +746,7 @@ export default function Home() {
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{msg}</p>}
       {sb && butuhKode && !kodeModal && <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{t('Akunmu belum punya kode pemulihan. Tanpa itu, kata sandi yang lupa tidak bisa dipulihkan.')}<button className="font-medium underline" onClick={() => setKodeModal('tawar')}>{t('Buat sekarang')}</button></p>}
 
-      <div className={`mt-4 grid gap-4 ${rail ? 'lg:grid-cols-[minmax(0,1fr)_12rem]' : 'lg:grid-cols-[minmax(0,1fr)_3.5rem]'}`}>
+      <div className={`mt-4 ${kelasTab ? '' : `grid gap-4 ${rail ? 'lg:grid-cols-[minmax(0,1fr)_12rem]' : 'lg:grid-cols-[minmax(0,1fr)_3.5rem]'}`}`}>
         <div className="min-w-0">
         {tab === 'ringkasan' ? (
           <main className="space-y-4">
@@ -793,8 +797,12 @@ export default function Home() {
           <main><Performa t={t} seri={seriPenuh} income={incomeHarian} memuat={butuh.some(n => !cache[n.key])} /></main>
         ) : tab === 'kalender' ? (
           <main><Kalender t={t} /></main>
+          ) : tab === 'analisis' ? (
+            <main><Analisis t={t} M={M} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} aset={asetDatar} target={d.target || {}} nama={NAMA} warna={WARNA} onKeRebalancing={() => { setFokus(null); setTab('rebalancing') }} /></main>
+          ) : tab === 'kalkulator' ? (
+            <main><KalkulatorForex t={t} /></main>
         ) : (
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <main className="min-w-0 space-y-3">
               <div className="flex items-center justify-between"><div><h2 className="text-lg font-semibold">{t(NAMA[tab])}</h2><p className="text-sm text-slate-500">{t('Nilai')} {M(sum(tab, 'nilai'))} · {t('Modal')} {M(sum(tab, 'modal'))}</p></div><button className="btn-p" onClick={() => setForm({ k: tab })}>{t('Tambah')}</button></div>
               {fAset && fBaris && <RingkasanAset k={tab} a={fAset} r={fBaris} cache={cache} M={M} t={t} onTambahTrx={() => setFormTrx({ k: tab, aid: fAset.id })} onUbahTrx={tid => setFormTrx({ k: tab, aid: fAset.id, tid })} onHapusTrx={tid => hapusTrx(tab, fAset.id, tid)} kurs={d.harga.kurs} onTambahTerima={() => setFormTerima({ k: tab, aid: fAset.id })} onUbahTerima={tid => setFormTerima({ k: tab, aid: fAset.id, tid })} onHapusTerima={tid => hapusTerima(tab, fAset.id, tid)} />}
@@ -804,7 +812,7 @@ export default function Home() {
           </div>
         )}
         </div>
-        <PanelFitur t={t} aktif={tab} onPilih={(id: FiturId) => { setFokus(null); setTab(id) }} buka={rail} onBuka={bukaRail} headerRef={headerRef} />
+        {!kelasTab && <PanelFitur t={t} aktif={tab} onPilih={(id: FiturId) => { setFokus(null); setTab(id) }} buka={rail} onBuka={bukaRail} headerRef={headerRef} />}
       </div>
       {kodeModal && <ModalKode t={t} mode={kodeModal} kode={kodePulih} err={errKode} butuh={butuhKode} username={namaDari(user?.email)} onBuat={buatKode} onTutup={() => { setKodeModal(null); setKodePulih(''); setErrKode('') }} />}
       {pulihEmail && <SandiBaru t={t} onSelesai={() => setPulihEmail(false)} />}
