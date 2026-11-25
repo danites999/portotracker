@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 const H = { 'User-Agent': 'Mozilla/5.0' }
 const tgl = (s: number) => new Date(s * 1000).toISOString().slice(0, 10)
 type M = [string, number][]
-const INDEKS: Record<string, string> = { JKSE: '^JKSE', GSPC: '^GSPC', IXIC: '^IXIC', N225: '^N225' } // IHSG, S&P 500, Nasdaq, Nikkei 225
+const INDEKS: Record<string, string> = { JKSE: '^JKSE', GSPC: '^GSPC', IXIC: '^IXIC', N225: '^N225', DJI: '^DJI', HSI: '^HSI' } // IHSG, S&P 500, Nasdaq, Nikkei 225
 
 async function yahoo(sym: string, dari: number): Promise<M> {
   const sampai = Math.floor(Date.now() / 1000) + 86400
