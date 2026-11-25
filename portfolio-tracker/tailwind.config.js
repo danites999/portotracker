@@ -1,1 +1,1 @@
-module.exports = { content: ['./app/**/*.{ts,tsx}'], darkMode: 'class', theme: { extend: {} }, plugins: [] }module.exports = { content: ['./app/**/*.{ts,tsx}'], darkMode: 'class', theme: { extend: {} }, plugins: [] }module.exports = { content: ['./app/**/*.{ts,tsx}'], darkMode: 'class', theme: { extend: {} }, plugins: [] }
+module.exports = { content: ['./app/**/*.{ts,tsx}'], darkMode: 'class', theme: { extend: {} }, plugins: [] }
