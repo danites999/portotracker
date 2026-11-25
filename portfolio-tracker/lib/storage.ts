@@ -3,7 +3,7 @@ import { Data } from './types'
 import { sb } from './supabase'
 import { terapkan } from './transaksi'
 const KEY = 'portfolio-tracker-v1'
-export const kosong = (): Data => ({ saham: [], ussaham: [], reksa: [], crypto: [], forex: [], emas: [], properti: [], deposito: [], riwayat: [], harga: { saham: {}, us: {}, crypto: {}, forex: {}, emas: 0, kurs: 16000, waktu: {} } })
+export const kosong = (): Data => ({ target: {}, saham: [], ussaham: [], reksa: [], crypto: [], forex: [], emas: [], properti: [], deposito: [], riwayat: [], harga: { saham: {}, us: {}, crypto: {}, forex: {}, emas: 0, kurs: 16000, waktu: {} } })
 const gabung = (j: any): Data => { const k = kosong(); return { ...k, ...j, harga: { ...k.harga, ...(j.harga || {}) } } }
 export function muat(): Data { try { const r = localStorage.getItem(KEY); return r ? gabung(JSON.parse(r)) : kosong() } catch { return kosong() } }
 export function simpan(d: Data) { try { localStorage.setItem(KEY, JSON.stringify(d)) } catch {} }
