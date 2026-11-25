@@ -10,10 +10,13 @@ import { Awal, Logo, T } from './Awal'
 import { Ticker } from './Ticker'
 import { Kalender } from './Kalender'
 import { Charts, Pil } from './Charts'
+import { Rebalancing } from './Rebalancing'
+import { Performa } from './Performa'
+import { TemaToggle } from './tema'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
 import { keEmail, namaDari } from '@/lib/akun'
-import { Terima, JENIS_TERIMA, punyaTerima, mataTerima, daftarTerima, totalTerima } from '@/lib/penerimaan'
+import { Terima, JENIS_TERIMA, punyaTerima, mataTerima, daftarTerima, totalTerima, penerimaanHarian } from '@/lib/penerimaan'
 
 const NAMA: Record<Kelas, string> = { saham: 'Saham', ussaham: 'Saham AS & ETF', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
 const WARNA: Record<Kelas, string> = { saham: '#2563eb', ussaham: '#4f46e5', reksa: '#059669', crypto: '#d97706', forex: '#0891b2', emas: '#ca8a04', properti: '#be123c', deposito: '#7c3aed' }
@@ -177,7 +180,12 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
         if (n === 0 && key !== 'bunga' && key !== 'pajak') return setErr(`${t(label)} ${t('harus lebih dari 0')}`)
       }
     }
-    if (k === 'ussaham' && !/^[A-Za-z0-9.-]{1,10}$/.test((v.kode || '').trim())) return setErr(t('Kode tidak valid (mis. AAPL, VOO)'))
+    if (k === 'ussaham') { // nama indeks (S&P 500, Nasdaq, Dow) bukan produk yang bisa dibeli: arahkan ke ETF-nya
+      const x = (v.kode || '').trim().toLowerCase()
+      const idx = /s\s*&?\s*p\s*-?\s*500|^sp-?500$/.test(x) ? t('S&P 500 adalah indeks, bukan produk yang bisa dibeli langsung. Pilih ETF yang mengikutinya, mis. VOO, SPY, atau IVV.') : /^(nasdaq|ndx)/.test(x) ? t('Nasdaq adalah indeks. Pilih ETF yang mengikutinya, mis. QQQ.') : /^(dow\s*jones|dow\s*30|djia$|dji$)/.test(x) ? t('Dow Jones adalah indeks. Pilih ETF yang mengikutinya, mis. DIA.') : ''
+      if (idx) return setErr(idx)
+      if (!/^[A-Za-z0-9.-]{1,10}$/.test(x)) return setErr(t('Kode tidak valid (mis. AAPL, VOO)'))
+    }
     if (k === 'saham' && !awal) { const lb = (v.satuan === 'Lot' ? 100 : 1) * Number(v.jumlah); if (Math.abs(lb - Math.round(lb)) > 1e-9) return setErr(t('Jumlah lembar harus bilangan bulat')) }
     if (k === 'deposito' && (Number(v.pajak) > 100 || !Number.isInteger(Number(v.tenor)))) return setErr(t('Pajak maksimal 100% dan tenor harus bilangan bulat'))
     const o: any = { ...(awal || {}), id: awal?.id || Math.random().toString(36).slice(2) + Date.now().toString(36) }
@@ -197,10 +205,11 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
           {fields.map(([key, label, tp, opts]) => (
             <label key={key} className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(label)}</span>
               {tp === 'select' ? <select value={v[key]} onChange={e => ubah(key, e.target.value)}>{opts!.map(o => <option key={o} value={o}>{t(o)}</option>)}</select>
-                : <input type={tp === 'number' ? 'number' : tp === 'desimal' ? 'text' : tp} step="any" inputMode={tp === 'number' || tp === 'desimal' ? 'decimal' : undefined} placeholder={tp === 'desimal' ? '0.5' : undefined} list={key === 'coinId' ? 'coins' : undefined} value={v[key]} onChange={e => ubah(key, tp === 'desimal' ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />}
+                : <input type={tp === 'number' ? 'number' : tp === 'desimal' ? 'text' : tp} step="any" inputMode={tp === 'number' || tp === 'desimal' ? 'decimal' : undefined} placeholder={tp === 'desimal' ? '0.5' : undefined} list={key === 'coinId' ? 'coins' : k === 'ussaham' && key === 'kode' ? 'etf-us' : undefined} value={v[key]} onChange={e => ubah(key, tp === 'desimal' ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />}
             </label>
           ))}
           {punyaTrx(k) && <p className="text-xs text-slate-500">{awal ? t('Jumlah, harga, dan tanggal beli diatur lewat Riwayat pembelian (tombol Ringkasan).') : t('Pembelian berikutnya bisa ditambahkan dengan tombol Beli lagi. Harga rata-rata dihitung otomatis.')}</p>}
+          <datalist id="etf-us">{[['VOO', 'Vanguard S&P 500 ETF'], ['SPY', 'SPDR S&P 500 ETF'], ['IVV', 'iShares Core S&P 500 ETF'], ['QQQ', 'Invesco QQQ (Nasdaq 100)'], ['VTI', 'Vanguard Total US Market'], ['DIA', 'SPDR Dow Jones Industrial'], ['VT', 'Vanguard Total World'], ['SCHD', 'Schwab US Dividend Equity'], ['AAPL', 'Apple'], ['MSFT', 'Microsoft'], ['NVDA', 'NVIDIA'], ['GOOGL', 'Alphabet'], ['AMZN', 'Amazon'], ['TSLA', 'Tesla'], ['META', 'Meta']].map(([c, n]) => <option key={c} value={c}>{n}</option>)}</datalist>
           <datalist id="coins">{opsi.map(c => <option key={c.id} value={c.id}>{c.name} ({c.symbol})</option>)}</datalist>
         </div>
         {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
@@ -403,7 +412,7 @@ function LupaSandi({ t, onKembali }: { t: (s: string) => string; onKembali: () =
         <label className="block text-sm font-medium" htmlFor="lupa-ulang">{t('Ulangi kata sandi baru')}</label>
         <input id="lupa-ulang" type="password" autoComplete="new-password" value={ulang} onChange={e => setUlang(e.target.value)} onKeyDown={e => e.key === 'Enter' && kirim()} />
       </>}
-      {err && <p className="text-sm text-red-600" role="alert">{err}</p>}{info && <p className="text-sm text-emerald-700">{info}</p>}
+      {err && <p className="text-sm text-red-600" role="alert">{err}</p>}{info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{info}</p>}
       <button className="btn-p w-full !py-2.5" disabled={busy} onClick={kirim}>{pakaiEmail ? t('Kirim tautan reset') : t('Atur ulang kata sandi')}</button>
       <button className="w-full text-sm text-blue-600" onClick={onKembali}>{t('Kembali ke halaman masuk')}</button>
     </>
@@ -453,7 +462,7 @@ function SandiBaru({ t, onSelesai }: { t: (s: string) => string; onSelesai: () =
     <div className="fixed inset-0 z-30 flex items-end justify-center bg-black/60 sm:items-center">
       <div className="w-full max-w-md rounded-t-2xl bg-white p-5 dark:bg-slate-900 sm:rounded-2xl" role="dialog" aria-modal="true">
         <h2 className="text-lg font-semibold">{t('Buat kata sandi baru')}</h2>
-        {beres ? <><p className="mt-3 text-sm text-emerald-700">{t('Kata sandi berhasil diganti.')}</p><div className="mt-5 flex justify-end"><button className="btn-p" onClick={onSelesai}>{t('Selesai')}</button></div></> : <>
+        {beres ? <><p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">{t('Kata sandi berhasil diganti.')}</p><div className="mt-5 flex justify-end"><button className="btn-p" onClick={onSelesai}>{t('Selesai')}</button></div></> : <>
           <div className="mt-3 space-y-3">
             <input type="password" autoComplete="new-password" placeholder={t('Kata sandi baru')} value={a} onChange={e => setA(e.target.value)} />
             <input type="password" autoComplete="new-password" placeholder={t('Ulangi kata sandi baru')} value={b} onChange={e => setB(e.target.value)} onKeyDown={e => e.key === 'Enter' && simpan()} />
@@ -499,7 +508,8 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
         <div className="mx-auto w-full max-w-sm space-y-3">
           <div className="mb-4 flex items-center justify-between">
             <button className="text-sm text-slate-500 hover:underline" onClick={onKembali}>{t('Kembali ke beranda')}</button>
-            <select className="!w-auto" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label="Language"><option value="id">Indonesia</option><option value="en">English</option></select>
+            <span className="flex items-center gap-2"><TemaToggle t={t} />
+            <select className="!w-auto" value={lang} onChange={e => setLang(e.target.value as Lang)} aria-label="Language"><option value="id">Indonesia</option><option value="en">English</option></select></span>
           </div>
           {lupa ? <LupaSandi t={t} onKembali={() => { setLupa(false); setDaftar(false) }} /> : <>
           <h1 className="text-3xl font-extrabold tracking-tight">{daftar ? t('Buat akun') : t('Masuk')}</h1>
@@ -510,7 +520,7 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
           <label className="block text-sm font-medium" htmlFor="sandi">{t('Kata sandi')}</label>
           <input id="sandi" type="password" autoComplete={daftar ? 'new-password' : 'current-password'} value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === 'Enter' && kirim()} />
           {!daftar && <button className="block text-sm text-blue-600" onClick={() => { setLupa(true); setErr(''); setInfo('') }}>{t('Lupa kata sandi?')}</button>}
-          {err && <p className="text-sm text-red-600" role="alert">{err}</p>}{info && <p className="text-sm text-emerald-700">{info}</p>}
+          {err && <p className="text-sm text-red-600" role="alert">{err}</p>}{info && <p className="text-sm text-emerald-700 dark:text-emerald-400">{info}</p>}
           <button className="btn-p w-full !py-2.5" disabled={busy} onClick={kirim}>{daftar ? t('Daftar') : t('Masuk')}</button>
           <button className="w-full text-sm text-blue-600" onClick={() => { setDaftar(!daftar); setErr(''); setInfo('') }}>{daftar ? t('Sudah punya akun? Masuk') : t('Belum punya akun? Daftar')}</button>
           </>}
@@ -524,7 +534,7 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
 export default function Home() {
   const [d, setD] = useState<Data>(kosong())
   const [ok, setOk] = useState(false)
-  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | Kelas>('ringkasan')
+  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
   const [layar, setLayar] = useState<'awal' | 'masuk'>('awal')
   const [daftarAwal, setDaftarAwal] = useState(false)
@@ -642,12 +652,15 @@ export default function Home() {
   const pl = total - modal
   const terimaTotal = KELAS.reduce((a, k) => a + sum(k, 'terima'), 0), hasil = pl + terimaTotal // hasil = selisih harga + dividen/kupon/sewa yang diterima
   const hist = useMemo(() => totalHarian(d, rows, cache, d.harga.kurs), [d, rows, cache])
-  const grafik = useMemo<{ t: string; v: number; m?: number }[]>(() => {
-    if (hist.seri.length < 2) return d.riwayat
-    const s = hist.seri.slice(), today = hariIni(), p = { t: today, v: total, m: modal }
-    if (total > 0) { if (s[s.length - 1].t === today) s[s.length - 1] = p; else s.push(p) }
-    return ringkas(s)
-  }, [hist, d.riwayat, total, modal])
+  // Riwayat harian penuh (nilai & modal) sampai hari ini; dipakai grafik total dan perbandingan performa.
+  const seriPenuh = useMemo(() => {
+    if (hist.seri.length < 2) return []
+    const x = hist.seri.slice(), today = hariIni(), p = { t: today, v: total, m: modal }
+    if (total > 0) { if (x[x.length - 1].t === today) x[x.length - 1] = p; else x.push(p) }
+    return x
+  }, [hist, total, modal])
+  const grafik = useMemo<{ t: string; v: number; m?: number }[]>(() => (seriPenuh.length > 1 ? ringkas(seriPenuh) : d.riwayat), [seriPenuh, d.riwayat])
+  const incomeHarian = useMemo(() => penerimaanHarian(d, d.harga.kurs), [d])
   const pakaiHist = hist.seri.length > 1
   const tickTotal = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(t('id-ID'), grafik.length > 180 ? { month: 'short', year: '2-digit', timeZone: 'UTC' } : { day: 'numeric', month: 'short', timeZone: 'UTC' })
   const pilih = (k: Kelas) => { setTab(k); setKelasAkhir(k); setFokus(null) }
@@ -710,21 +723,22 @@ export default function Home() {
             <select className="!w-auto" value={every} onChange={e => setEvery(Number(e.target.value))} aria-label="Auto-refresh"><option value={0}>{t('Auto-refresh mati')}</option><option value={1}>{t('Tiap 1 menit')}</option><option value={5}>{t('Tiap 5 menit')}</option><option value={15}>{t('Tiap 15 menit')}</option></select>
             <button className="btn-p" onClick={refresh} disabled={load}>{load ? t('Memuat…') : t('Refresh sekarang')}</button>
             {sb && namaDari(user?.email) && <span className="text-sm text-slate-500">@{namaDari(user.email)}</span>}
+            <TemaToggle t={t} />
             {sb && namaDari(user?.email) && <button className="btn" onClick={() => setKodeModal('tawar')}>{t('Kode pemulihan')}</button>}
             {sb && <button className="btn" onClick={() => { sb.auth.signOut(); setLayar('awal') }}>{t('Keluar')}</button>}
           </div>
         </div>
         <nav className="mt-3 flex flex-wrap items-center gap-2">
           <button onClick={() => { setTab('ringkasan'); setFokus(null) }} className={`whitespace-nowrap rounded-lg border border-emerald-700 px-3 py-1.5 text-sm font-medium ${tab === 'ringkasan' ? 'bg-emerald-700 text-white' : 'text-emerald-700 dark:text-emerald-500'}`}>{t('Ringkasan total')}</button>
-          {([['investasi', 'Investasi'], ['charts', 'Charts'], ['kalender', 'Kalender ekonomi']] as const).map(([id, nama]) => {
+          {([['investasi', 'Investasi'], ['charts', 'Charts'], ['rebalancing', 'Rebalancing'], ['performa', 'Performa vs Benchmark'], ['kalender', 'Kalender ekonomi']] as const).map(([id, nama]) => {
             const aktif = id === 'investasi' ? !!kelasTab : tab === id
             return <button key={id} onClick={() => { setFokus(null); if (id === 'investasi') { if (!kelasTab) pilih(kelasAkhir) } else setTab(id) }} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ${aktif ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400'}`}>{t(nama)}</button>
           })}
         </nav>
         {kelasTab && <nav className="mt-2 flex gap-1 overflow-x-auto border-t border-slate-200 pt-2 dark:border-slate-800">{KELAS.map(k => <button key={k} onClick={() => pilih(k)} className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${tab === k ? 'bg-slate-200 font-medium dark:bg-slate-700' : 'text-slate-600 dark:text-slate-400'}`}>{t(NAMA[k])}</button>)}</nav>}
       </header>
-      {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900">{msg}</p>}
-      {sb && butuhKode && !kodeModal && <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-100 p-3 text-sm text-amber-900">{t('Akunmu belum punya kode pemulihan. Tanpa itu, kata sandi yang lupa tidak bisa dipulihkan.')}<button className="font-medium underline" onClick={() => setKodeModal('tawar')}>{t('Buat sekarang')}</button></p>}
+      {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{msg}</p>}
+      {sb && butuhKode && !kodeModal && <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{t('Akunmu belum punya kode pemulihan. Tanpa itu, kata sandi yang lupa tidak bisa dipulihkan.')}<button className="font-medium underline" onClick={() => setKodeModal('tawar')}>{t('Buat sekarang')}</button></p>}
 
       {tab === 'ringkasan' ? (
         <main className="mt-4 space-y-4">
@@ -768,6 +782,11 @@ export default function Home() {
         </main>
       ) : tab === 'charts' ? (
         <main className="mt-4"><Charts t={t} punya={punyaChart} /></main>
+      ) : tab === 'rebalancing' ? (
+        <main className="mt-4"><Rebalancing t={t} M={M} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} target={d.target || {}} nama={NAMA} warna={WARNA}
+          onTarget={(k, v) => setD(p => { const tg = { ...(p.target || {}) }; if (v == null) delete tg[k]; else tg[k] = v; return { ...p, target: tg } })} onSemua={v => setD(p => ({ ...p, target: v }))} /></main>
+      ) : tab === 'performa' ? (
+        <main className="mt-4"><Performa t={t} seri={seriPenuh} income={incomeHarian} memuat={butuh.some(n => !cache[n.key])} /></main>
       ) : tab === 'kalender' ? (
         <main className="mt-4"><Kalender t={t} /></main>
       ) : (
