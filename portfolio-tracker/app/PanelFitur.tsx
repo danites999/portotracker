@@ -58,10 +58,10 @@ export function PanelFitur({ t, aktif, onPilih, buka, onBuka, headerRef }: {
                     onClick={() => onPilih(f.id)}
                     aria-current={on ? 'page' : undefined}
                     title={t(f.nama)}
-                    className={`flex w-full items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-left text-sm ${buka ? '' : 'lg:justify-center lg:px-0'} ${on ? 'bg-emerald-50 font-medium text-emerald-800 ring-1 ring-emerald-600 dark:bg-emerald-950 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-200/70 dark:text-slate-300 dark:hover:bg-slate-800'}`}
+                    className={`flex w-full items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-left text-sm lg:items-start lg:whitespace-normal ${buka ? '' : 'lg:justify-center lg:px-0'} ${on ? 'bg-emerald-50 font-medium text-emerald-800 ring-1 ring-emerald-600 dark:bg-emerald-950 dark:text-emerald-300' : 'text-slate-600 hover:bg-slate-200/70 dark:text-slate-300 dark:hover:bg-slate-800'}`}
                   >
-                    <span aria-hidden="true">{f.ikon}</span>
-                    <span className={buka ? '' : 'lg:sr-only'}>{t(f.nama)}</span>
+                    <span aria-hidden="true" className="leading-5">{f.ikon}</span>
+                    <span className={`min-w-0 break-words leading-5 ${buka ? '' : 'lg:sr-only'}`}>{t(f.nama)}</span>
                   </button>
                 </li>
               )
