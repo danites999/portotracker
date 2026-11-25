@@ -1,16 +1,18 @@
 'use client'
 import { RefObject, useEffect, useState } from 'react'
 
-export type FiturId = 'charts' | 'rebalancing' | 'performa' | 'kalender'
+export type FiturId = 'charts' | 'rebalancing' | 'analisis' | 'performa' | 'kalender' | 'kalkulator'
 
-// Menu fitur dan alat: dipisah dari menu utama (Ringkasan total, Investasi).
+// Menu fitur dan alat: dipisah dari menu utama (Ringkasan total, Investasi). Hanya tampil di luar menu Investasi.
 // Layar lebar: panel vertikal di sisi kanan, bisa dilipat jadi deretan ikon, dan tetap terlihat saat halaman digulir.
 // Layar kecil: berubah jadi satu baris tombol yang bisa digeser, di atas konten.
 const FITUR: { id: FiturId; nama: string; ikon: string }[] = [
   { id: 'charts', nama: 'Charts', ikon: '📈' },
   { id: 'rebalancing', nama: 'Rebalancing', ikon: '⚖️' },
+  { id: 'analisis', nama: 'Analisis & alokasi dana', ikon: '🧭' },
   { id: 'performa', nama: 'Performa vs Benchmark', ikon: '🎯' },
   { id: 'kalender', nama: 'Kalender ekonomi', ikon: '📅' },
+  { id: 'kalkulator', nama: 'Kalkulator forex', ikon: '💱' },
 ]
 
 export function PanelFitur({ t, aktif, onPilih, buka, onBuka, headerRef }: {
