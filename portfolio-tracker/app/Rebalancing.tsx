@@ -6,15 +6,15 @@ import { Mode, hitungRebalance, samakanDenganSekarang } from '@/lib/rebalance'
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 const ILIKUID: Kelas[] = ['properti', 'deposito']
 
-export function Rebalancing({ t, M, nilai, target, nama, warna, onTarget, onSemua }: {
-  t: (s: string) => string; M: (n: number) => string
+export function Rebalancing({ t, M, faktor = 1, kode = 'IDR', nilai, target, nama, warna, onTarget, onSemua }: {
+  t: (s: string) => string; M: (n: number) => string; faktor?: number; kode?: string // faktor: nilai rupiah x faktor = nilai dalam mata uang tampilan
   nilai: Record<Kelas, number>; target: Partial<Record<Kelas, number>>; nama: Record<Kelas, string>; warna: Record<Kelas, string>
   onTarget: (k: Kelas, v: number | undefined) => void; onSemua: (v: Partial<Record<Kelas, number>>) => void
 }) {
   const [mode, setMode] = useState<Mode>('penuh')
   const [dana, setDana] = useState(''), [tol, setTol] = useState('5')
   const loc = t('id-ID')
-  const r = hitungRebalance(nilai, target, { mode, dana: Number(dana) || 0, toleransi: Number(tol) || 0 })
+  const r = hitungRebalance(nilai, target, { mode, dana: (Number(dana) || 0) / faktor, toleransi: Number(tol) || 0 })
   const pct = (n: number) => `${n.toLocaleString(loc, { maximumFractionDigits: 1 })}%`
   const hampir = Math.abs(r.totalTarget - 100) < 0.05
   const seg = (aktif: boolean) => `rounded-lg px-3 py-1.5 text-sm ${aktif ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'border border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-400'}`
@@ -31,7 +31,7 @@ export function Rebalancing({ t, M, nilai, target, nama, warna, onTarget, onSemu
         </div>
         <div className="flex flex-wrap items-end gap-4">
           {mode === 'dana'
-            ? <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Dana baru yang akan ditambahkan (Rp)')}</span><input className="!w-56" type="number" inputMode="decimal" min="0" value={dana} onChange={e => setDana(e.target.value)} /></label>
+            ? <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Dana baru yang akan ditambahkan (Rp)').replace('(Rp)', `(${kode})`)}</span><input className="!w-56" type="number" inputMode="decimal" min="0" value={dana} onChange={e => setDana(e.target.value)} /></label>
             : <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Toleransi selisih (poin persen)')}</span><input className="!w-32" type="number" inputMode="decimal" min="0" step="0.5" value={tol} onChange={e => setTol(e.target.value)} /></label>}
           <button className="btn" onClick={() => onSemua(samakanDenganSekarang(nilai))}>{t('Samakan dengan porsi sekarang')}</button>
           <button className="btn" onClick={() => onSemua({})}>{t('Kosongkan target')}</button>
