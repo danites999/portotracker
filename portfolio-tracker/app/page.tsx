@@ -15,6 +15,7 @@ import { Performa } from './Performa'
 import { TemaToggle } from './tema'
 import { PanelFitur, FiturId } from './PanelFitur'
 import { Analisis } from './Analisis'
+import { MATA, formatMata } from '@/lib/mata'
 import { KalkulatorForex } from './KalkulatorForex'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
@@ -94,7 +95,7 @@ function Berita({ q, label, lang, t }: { q: string; label: string; lang: Lang; t
   )
 }
 
-function RingkasanAset({ k, a, r, cache, M, t, kurs, onTambahTrx, onUbahTrx, onHapusTrx, onTambahTerima, onUbahTerima, onHapusTerima }: { k: Kelas; a: any; r: Baris; cache: Cache; M: (n: number) => string; t: (s: string) => string; kurs: number; onTambahTrx: () => void; onUbahTrx: (id: string) => void; onHapusTrx: (id: string) => void; onTambahTerima: () => void; onUbahTerima: (id: string) => void; onHapusTerima: (id: string) => void }) {
+function RingkasanAset({ k, a, r, cache, M, t, kurs, onTambahTrx, onUbahTrx, onHapusTrx, onTambahTerima, onUbahTerima, onHapusTerima }: { k: Kelas; a: any; r: Baris; cache: Cache; M: (n: number, asli?: boolean) => string; t: (s: string) => string; kurs: number; onTambahTrx: () => void; onUbahTrx: (id: string) => void; onHapusTrx: (id: string) => void; onTambahTerima: () => void; onUbahTerima: (id: string) => void; onHapusTerima: (id: string) => void }) {
   const loc = t('id-ID'), pasar = k === 'saham' || k === 'ussaham' || k === 'crypto' || k === 'forex' || k === 'emas'
   const c = dariApi(k) && !(k === 'emas' && a.hargaManual > 0) ? cache[kunciSeri(k, a)] : undefined
   const s = useMemo(() => seriAset(k, a, c, kurs), [k, a, c, kurs])
@@ -266,10 +267,10 @@ function FormTrx({ k, a, awal, t, onSave, onClose }: { k: Kelas; a: any; awal?: 
   )
 }
 
-function RiwayatBeli({ k, a, M, t, onTambah, onUbah, onHapus }: { k: Kelas; a: any; M: (n: number) => string; t: (s: string) => string; onTambah: () => void; onUbah: (id: string) => void; onHapus: (id: string) => void }) {
+function RiwayatBeli({ k, a, M, t, onTambah, onUbah, onHapus }: { k: Kelas; a: any; M: (n: number, asli?: boolean) => string; t: (s: string) => string; onTambah: () => void; onUbah: (id: string) => void; onHapus: (id: string) => void }) {
   const loc = t('id-ID'), trx = daftarTrx(k, a), rt = ringkasTrx(trx), usd = (k === 'crypto' && a.mata === 'USD') || k === 'ussaham'
   const tgl = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
-  const uang = (n: number) => (usd ? `US$${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : M(n))
+  const uang = (n: number) => (usd ? `US$${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : M(n, true))
   const td = 'px-2 py-1.5', th = 'px-2 py-1.5 font-medium'
   return (
     <div className="mt-5">
@@ -316,10 +317,10 @@ function FormTerima({ k, a, awal, t, onSave, onClose }: { k: Kelas; a: any; awal
   )
 }
 
-function RiwayatTerima({ k, a, M, t, onTambah, onUbah, onHapus }: { k: Kelas; a: any; M: (n: number) => string; t: (s: string) => string; onTambah: () => void; onUbah: (id: string) => void; onHapus: (id: string) => void }) {
+function RiwayatTerima({ k, a, M, t, onTambah, onUbah, onHapus }: { k: Kelas; a: any; M: (n: number, asli?: boolean) => string; t: (s: string) => string; onTambah: () => void; onUbah: (id: string) => void; onHapus: (id: string) => void }) {
   const loc = t('id-ID'), l = daftarTerima(a), usd = mataTerima(k, a) === 'USD', total = totalTerima(a)
   const tgl = (x: string) => new Date(x + 'T00:00:00Z').toLocaleDateString(loc, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
-  const uang = (n: number) => (usd ? `US$${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : M(n))
+  const uang = (n: number) => (usd ? `US$${n.toLocaleString(loc, { maximumFractionDigits: 2 })}` : M(n, true))
   const td = 'px-2 py-1.5', th = 'px-2 py-1.5 font-medium'
   return (
     <div className="mt-5">
@@ -540,6 +541,9 @@ export default function Home() {
   const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | 'analisis' | 'kalkulator' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
   const [rail, setRail] = useState(true)
+  const [mataTampil, setMataTampil] = useState('IDR') // mata uang untuk menampilkan nilai modal dan investasi
+  const [kursMap, setKursMap] = useState<Record<string, number>>({}) // rupiah per 1 unit mata uang tampilan
+  const [kursGagal, setKursGagal] = useState(false)
   const headerRef = useRef<HTMLElement>(null)
   const [layar, setLayar] = useState<'awal' | 'masuk'>('awal')
   const [daftarAwal, setDaftarAwal] = useState(false)
@@ -566,11 +570,13 @@ export default function Home() {
   const [cek, setCek] = useState(!!sb)
   const t = useMemo(() => tr(lang), [lang])
   const pilihBahasa = (l: Lang) => { setLang(l); localStorage.setItem('pt-lang', l) }
+  const pilihMata = (m: string) => { setMataTampil(m); try { localStorage.setItem('pt-mata', m) } catch {} }
   const bukaRail = (b: boolean) => { setRail(b); try { localStorage.setItem('pt-rail', b ? '1' : '0') } catch {} }
   const uid = user?.id
   useEffect(() => {
     setHide(localStorage.getItem('pt-hide') === '1')
     setRail(localStorage.getItem('pt-rail') !== '0')
+    const mt = localStorage.getItem('pt-mata'); if (mt && MATA.some(m => m[0] === mt)) setMataTampil(mt)
     setLang(localStorage.getItem('pt-lang') === 'en' ? 'en' : 'id')
     if (!sb) { setD(muat()); setOk(true); return }
     sb.auth.getSession().then(({ data }) => { setUser(data.session?.user ?? null); setCek(false) })
@@ -680,7 +686,14 @@ export default function Home() {
       return { ...p, riwayat: [...(l?.t === t ? p.riwayat.slice(0, -1) : p.riwayat), { t, v: total, m: modal }].slice(-730) } })
   }, [total, modal, ok])
 
-  const M = (n: number) => (hide ? 'Rp ••••••' : rp(n))
+  // Semua nilai dihitung dalam rupiah, lalu dikonversi saat ditampilkan. asli = true: tetap rupiah (isian dan riwayat catatan).
+  const kursAktif = mataTampil === 'IDR' ? 1 : kursMap[mataTampil] // rupiah per 1 unit mata uang tampilan; kosong bila belum termuat
+  const mataAktif = kursAktif ? mataTampil : 'IDR'
+  const faktor = kursAktif ? 1 / kursAktif : 1
+  const M = (n: number, asli = false) => {
+    const idr = asli || mataAktif === 'IDR'
+    return hide ? `${idr ? 'Rp' : mataAktif} ••••••` : idr ? rp(n) : formatMata(n * faktor, mataAktif, t('id-ID'))
+  }
   const simpanAset = (o: any) => { const k = form!.k; setD(p => ({ ...p, [k]: p[k].some(a => a.id === o.id) ? p[k].map(a => (a.id === o.id ? o : a)) : [...p[k], o] })); setForm(null); setTimeout(refresh, 0) }
   const simpanTrx = (x: Trx) => {
     if (!formTrx) return
@@ -716,6 +729,20 @@ export default function Home() {
     return l.filter((x, i) => l.findIndex(y => y.j === x.j && y.s === x.s) === i)
   }, [d.saham, d.ussaham, d.crypto, d.forex, d.emas])
 
+  useEffect(() => {
+    if (mataTampil === 'IDR') { setKursGagal(false); return }
+    let batal = false
+    const muat = () => fetch(`/api/forex?mata=${mataTampil}`).then(r => r.json()).then(j => {
+      if (batal) return
+      const v = j?.harga?.[mataTampil]
+      if (typeof v === 'number' && v > 0) { setKursMap(m => ({ ...m, [mataTampil]: v })); setKursGagal(false) } else setKursGagal(true)
+    }).catch(() => { if (!batal) setKursGagal(true) })
+    setKursGagal(false)
+    muat()
+    const id = setInterval(muat, 10 * 60 * 1000)
+    return () => { batal = true; clearInterval(id) }
+  }, [mataTampil])
+
   const asetDatar = useMemo(() => KELAS.flatMap(k => rows[k].map(r => ({ nama: r.nama, k, nilai: r.nilai }))), [rows])
 
   if (sb && cek) return null
@@ -728,6 +755,7 @@ export default function Home() {
           <div><h1 className="text-lg font-semibold leading-tight">{t('Portfolio Tracker')}<sup className="text-[10px]">™</sup></h1><p className="text-[11px] leading-tight text-slate-500">{KREDIT}</p></div>
           <div className="flex flex-wrap items-center gap-2">
             <select className="!w-auto" value={lang} onChange={e => pilihBahasa(e.target.value as Lang)} aria-label="Language"><option value="id">{t('Indonesia')}</option><option value="en">{t('English')}</option></select>
+            <label className="flex items-center gap-1 text-sm text-slate-500"><span className="hidden sm:inline">{t('Mata uang')}</span><select className="!w-auto" value={mataTampil} onChange={e => pilihMata(e.target.value)} aria-label={t('Mata uang tampilan')} title={t('Mata uang tampilan')}>{MATA.map(m => <option key={m[0]} value={m[0]}>{m[0]}</option>)}</select></label>
             <button className="btn" onClick={() => { setHide(!hide); localStorage.setItem('pt-hide', hide ? '0' : '1') }}>{hide ? t('Tampilkan nominal') : t('Sembunyikan nominal')}</button>
             <select className="!w-auto" value={every} onChange={e => setEvery(Number(e.target.value))} aria-label="Auto-refresh"><option value={0}>{t('Auto-refresh mati')}</option><option value={1}>{t('Tiap 1 menit')}</option><option value={5}>{t('Tiap 5 menit')}</option><option value={15}>{t('Tiap 15 menit')}</option></select>
             <button className="btn-p" onClick={refresh} disabled={load}>{load ? t('Memuat…') : t('Refresh sekarang')}</button>
@@ -746,6 +774,11 @@ export default function Home() {
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{msg}</p>}
       {sb && butuhKode && !kodeModal && <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{t('Akunmu belum punya kode pemulihan. Tanpa itu, kata sandi yang lupa tidak bisa dipulihkan.')}<button className="font-medium underline" onClick={() => setKodeModal('tawar')}>{t('Buat sekarang')}</button></p>}
 
+      {(tab === 'ringkasan' || tab === 'rebalancing' || tab === 'analisis' || !!kelasTab) && mataTampil !== 'IDR' && (
+        <p className={`mt-3 text-xs ${kursAktif || !kursGagal ? 'text-slate-500' : 'text-amber-700 dark:text-amber-400'}`}>
+          {kursAktif ? `${t('Nilai dikonversi dari rupiah dengan kurs')} 1 ${mataTampil} = ${rp(kursAktif)} (${t('kurs tengah')}). ${t('Seluruh nilai, termasuk riwayat dan grafik, memakai kurs terbaru ini, bukan kurs pada tanggal transaksi. Isian dan riwayat catatan tetap dalam mata uang aslinya.')}` : kursGagal ? `${t('Kurs')} ${mataTampil} ${t('gagal dimuat, nilai sementara ditampilkan dalam rupiah.')}` : t('Memuat kurs…')}
+        </p>
+      )}
       <div className={`mt-4 ${kelasTab ? '' : `grid gap-4 ${rail ? 'lg:grid-cols-[minmax(0,1fr)_12rem]' : 'lg:grid-cols-[minmax(0,1fr)_3.5rem]'}`}`}>
         <div className="min-w-0">
         {tab === 'ringkasan' ? (
@@ -791,14 +824,14 @@ export default function Home() {
         ) : tab === 'charts' ? (
           <main><Charts t={t} punya={punyaChart} /></main>
         ) : tab === 'rebalancing' ? (
-          <main><Rebalancing t={t} M={M} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} target={d.target || {}} nama={NAMA} warna={WARNA}
+          <main><Rebalancing t={t} M={M} faktor={faktor} kode={mataAktif} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} target={d.target || {}} nama={NAMA} warna={WARNA}
             onTarget={(k, v) => setD(p => { const tg = { ...(p.target || {}) }; if (v == null) delete tg[k]; else tg[k] = v; return { ...p, target: tg } })} onSemua={v => setD(p => ({ ...p, target: v }))} /></main>
         ) : tab === 'performa' ? (
           <main><Performa t={t} seri={seriPenuh} income={incomeHarian} memuat={butuh.some(n => !cache[n.key])} /></main>
         ) : tab === 'kalender' ? (
           <main><Kalender t={t} /></main>
           ) : tab === 'analisis' ? (
-            <main><Analisis t={t} M={M} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} aset={asetDatar} target={d.target || {}} nama={NAMA} warna={WARNA} onKeRebalancing={() => { setFokus(null); setTab('rebalancing') }} /></main>
+            <main><Analisis t={t} M={M} faktor={faktor} kode={mataAktif} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} aset={asetDatar} target={d.target || {}} nama={NAMA} warna={WARNA} onKeRebalancing={() => { setFokus(null); setTab('rebalancing') }} /></main>
           ) : tab === 'kalkulator' ? (
             <main><KalkulatorForex t={t} /></main>
         ) : (
