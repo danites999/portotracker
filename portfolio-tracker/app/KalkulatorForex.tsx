@@ -1,15 +1,10 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { bacaAngka } from '@/lib/uang'
+import { MATA } from '@/lib/mata'
 
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 // Kurs diambil lewat /api/forex (terhadap IDR). Kurs silang, mis. USD ke GBP, dihitung dari dua kurs terhadap IDR.
-const MATA: [string, string][] = [
-  ['IDR', 'Rupiah Indonesia'], ['USD', 'Dolar AS'], ['EUR', 'Euro'], ['GBP', 'Pound Inggris'], ['JPY', 'Yen Jepang'], ['SGD', 'Dolar Singapura'],
-  ['AUD', 'Dolar Australia'], ['CNY', 'Yuan China'], ['MYR', 'Ringgit Malaysia'], ['SAR', 'Riyal Saudi'], ['HKD', 'Dolar Hong Kong'], ['KRW', 'Won Korea'],
-  ['THB', 'Baht Thailand'], ['CHF', 'Franc Swiss'], ['CAD', 'Dolar Kanada'], ['NZD', 'Dolar Selandia Baru'], ['INR', 'Rupee India'], ['AED', 'Dirham UAE'],
-  ['PHP', 'Peso Filipina'], ['TWD', 'Dolar Taiwan'],
-]
 const LAIN = ['IDR', 'USD', 'EUR', 'GBP', 'SGD', 'JPY', 'AUD']
 
 export function KalkulatorForex({ t }: { t: (s: string) => string }) {
