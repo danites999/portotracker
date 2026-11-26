@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Kelas } from '@/lib/types'
 import { PROFIL_TARGET, Profil, alokasiDana, catatanPorto } from '@/lib/analisis'
 import { bacaAngka } from '@/lib/uang'
@@ -13,19 +13,23 @@ const PROFIL: { id: Profil; nama: string; ket: string }[] = [
   { id: 'saya', nama: 'Target saya', ket: 'Memakai target yang Anda isi di menu Rebalancing.' },
 ]
 
-export function Analisis({ t, M, nilai, aset, target, nama, warna, onKeRebalancing }: {
-  t: (s: string) => string; M: (n: number) => string
+export function Analisis({ t, M, faktor = 1, kode = 'IDR', nilai, aset, target, nama, warna, onKeRebalancing }: {
+  t: (s: string) => string; M: (n: number) => string; faktor?: number; kode?: string // faktor: nilai rupiah x faktor = nilai dalam mata uang tampilan
   nilai: Record<Kelas, number>; aset: { nama: string; k: Kelas; nilai: number }[]
   target: Partial<Record<Kelas, number>>; nama: Record<Kelas, string>; warna: Record<Kelas, string>
   onKeRebalancing: () => void
 }) {
-  const [teks, setTeks] = useState('10jt')
+  const awal = () => (kode === 'IDR' ? '10jt' : String(Number((1e7 * faktor).toPrecision(2)))) // setara kira-kira Rp 10 juta
+  const [teks, setTeks] = useState(awal)
+  useEffect(() => { setTeks(awal()) }, [kode]) // eslint-disable-line react-hooks/exhaustive-deps
   const [profil, setProfil] = useState<Profil>('moderat')
   const loc = t('id-ID'), lokal = loc.startsWith('id') ? 'id' : 'en'
   const pct = (n: number) => `${n.toLocaleString(loc, { maximumFractionDigits: 1 })}%`
 
-  const dana = bacaAngka(teks, lokal, true)
-  const danaOk = isFinite(dana) && dana > 0 && dana < 1e15
+  const danaTampil = bacaAngka(teks, lokal, true) // dalam mata uang tampilan
+  const dana = danaTampil / faktor // dalam rupiah, untuk perhitungan
+  const danaOk = isFinite(danaTampil) && danaTampil > 0 && dana < 1e15
+  const cepat: [string, string][] = kode === 'IDR' ? CEPAT.map(j => [`${j}jt`, `${j} ${t('jt')}`]) : [100, 500, 1000, 5000, 10000].map(n => [String(n), n.toLocaleString(loc)])
   const targetAktif = profil === 'saya' ? target : PROFIL_TARGET[profil]
   const adaTarget = Object.values(targetAktif).some(v => (v || 0) > 0)
   const r = alokasiDana(nilai, targetAktif, danaOk ? dana : 0)
@@ -56,10 +60,10 @@ export function Analisis({ t, M, nilai, aset, target, nama, warna, onKeRebalanci
         </div>
 
         <div>
-          <label htmlFor="dana-alokasi" className="mb-1 block text-sm font-medium">{t('Dana yang akan dialokasikan')}</label>
+          <label htmlFor="dana-alokasi" className="mb-1 block text-sm font-medium">{t('Dana yang akan dialokasikan')} ({kode})</label>
           <input id="dana-alokasi" inputMode="decimal" autoComplete="off" value={teks} onChange={e => setTeks(e.target.value)} placeholder={t('mis. 10jt atau 10.000.000')} aria-invalid={!danaOk && teks.trim() !== ''} className="sm:max-w-xs" />
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {CEPAT.map(j => <button key={j} type="button" className="btn" onClick={() => setTeks(`${j}jt`)}>{j} {t('jt')}</button>)}
+            {cepat.map(([v, l]) => <button key={v} type="button" className="btn" onClick={() => setTeks(v)}>{l}</button>)}
           </div>
           {!danaOk && <p className="mt-2 text-sm text-red-600">{t('Masukkan jumlah dana yang valid, mis. 10jt atau 10.000.000')}</p>}
           {danaOk && <p className="mt-2 text-sm text-slate-500">{M(dana)}</p>}
