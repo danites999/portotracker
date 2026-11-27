@@ -15,6 +15,7 @@ import { Performa } from './Performa'
 import { TemaToggle } from './tema'
 import { PanelFitur, FiturId } from './PanelFitur'
 import { Analisis } from './Analisis'
+import { Perencanaan } from './Perencanaan'
 import { MATA, formatMata } from '@/lib/mata'
 import { KalkulatorForex } from './KalkulatorForex'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
@@ -538,7 +539,7 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
 export default function Home() {
   const [d, setD] = useState<Data>(kosong())
   const [ok, setOk] = useState(false)
-  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | 'analisis' | 'kalkulator' | Kelas>('ringkasan')
+  const [tab, setTab] = useState<'ringkasan' | 'charts' | 'kalender' | 'rebalancing' | 'performa' | 'analisis' | 'perencanaan' | 'kalkulator' | Kelas>('ringkasan')
   const [kelasAkhir, setKelasAkhir] = useState<Kelas>('saham')
   const [rail, setRail] = useState(true)
   const [mataTampil, setMataTampil] = useState('IDR') // mata uang untuk menampilkan nilai modal dan investasi
@@ -774,7 +775,7 @@ export default function Home() {
       {msg && <p className="mt-3 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{msg}</p>}
       {sb && butuhKode && !kodeModal && <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-100 p-3 text-sm text-amber-900 dark:bg-amber-950/60 dark:text-amber-200">{t('Akunmu belum punya kode pemulihan. Tanpa itu, kata sandi yang lupa tidak bisa dipulihkan.')}<button className="font-medium underline" onClick={() => setKodeModal('tawar')}>{t('Buat sekarang')}</button></p>}
 
-      {(tab === 'ringkasan' || tab === 'rebalancing' || tab === 'analisis' || !!kelasTab) && mataTampil !== 'IDR' && (
+      {(tab === 'ringkasan' || tab === 'rebalancing' || tab === 'analisis' || tab === 'perencanaan' || !!kelasTab) && mataTampil !== 'IDR' && (
         <p className={`mt-3 text-xs ${kursAktif || !kursGagal ? 'text-slate-500' : 'text-amber-700 dark:text-amber-400'}`}>
           {kursAktif ? `${t('Nilai dikonversi dari rupiah dengan kurs')} 1 ${mataTampil} = ${rp(kursAktif)} (${t('kurs tengah')}). ${t('Seluruh nilai, termasuk riwayat dan grafik, memakai kurs terbaru ini, bukan kurs pada tanggal transaksi. Isian dan riwayat catatan tetap dalam mata uang aslinya.')}` : kursGagal ? `${t('Kurs')} ${mataTampil} ${t('gagal dimuat, nilai sementara ditampilkan dalam rupiah.')}` : t('Memuat kurs…')}
         </p>
@@ -832,6 +833,8 @@ export default function Home() {
           <main><Kalender t={t} /></main>
           ) : tab === 'analisis' ? (
             <main><Analisis t={t} M={M} faktor={faktor} kode={mataAktif} nilai={Object.fromEntries(KELAS.map(k => [k, sum(k, 'nilai')])) as Record<Kelas, number>} aset={asetDatar} target={d.target || {}} nama={NAMA} warna={WARNA} onKeRebalancing={() => { setFokus(null); setTab('rebalancing') }} /></main>
+          ) : tab === 'perencanaan' ? (
+            <main><Perencanaan t={t} M={M} faktor={faktor} kode={mataAktif} totalPorto={KELAS.reduce((a, k) => a + sum(k, 'nilai'), 0)} nama={NAMA} warna={WARNA} /></main>
           ) : tab === 'kalkulator' ? (
             <main><KalkulatorForex t={t} /></main>
         ) : (
