@@ -149,5 +149,6 @@ const en: Record<string, string> = {
   'Mata uang tampilan': 'Display currency', 'Nilai dikonversi dari rupiah dengan kurs': 'Values are converted from rupiah at the rate',
   'kurs tengah': 'mid-market rate', 'Seluruh nilai, termasuk riwayat dan grafik, memakai kurs terbaru ini, bukan kurs pada tanggal transaksi. Isian dan riwayat catatan tetap dalam mata uang aslinya.': 'All values, including history and charts, use this latest rate, not the rate on the transaction date. Inputs and recorded history stay in their original currency.',
   'Kurs': 'Rate', 'gagal dimuat, nilai sementara ditampilkan dalam rupiah.': 'failed to load, values are temporarily shown in rupiah.',
+  'Halo': 'Hi',
 }
 export const tr = (lang: Lang) => (s: string) => (lang === 'en' ? en[s] ?? s : s)
