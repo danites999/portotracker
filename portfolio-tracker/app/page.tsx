@@ -19,7 +19,7 @@ import { MATA, formatMata } from '@/lib/mata'
 import { KalkulatorForex } from './KalkulatorForex'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
 import { Cache, seriAset, kunciSeri, dariApi, simbolApi, totalHarian, ringkas, hariIni, selisihHari } from '@/lib/seri'
-import { keEmail, namaDari } from '@/lib/akun'
+import { keEmail, namaDari, namaSapaan } from '@/lib/akun'
 import { Terima, JENIS_TERIMA, punyaTerima, mataTerima, daftarTerima, totalTerima, penerimaanHarian } from '@/lib/penerimaan'
 
 const NAMA: Record<Kelas, string> = { saham: 'Saham', ussaham: 'Saham AS & ETF', reksa: 'Reksadana', crypto: 'Crypto', forex: 'Forex', emas: 'Emas', properti: 'Properti', deposito: 'Deposito' }
@@ -427,7 +427,7 @@ function ModalKode({ t, mode, kode, err, butuh, username, onBuat, onTutup }: { t
   const [sudah, setSudah] = useState(false), [busy, setBusy] = useState(false), [salin, setSalin] = useState(false)
   const unduh = () => {
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(new Blob([`Portfolio Tracker - kode pemulihan kata sandi\nUsername: ${username}\nKode: ${kode}\n\nSimpan di tempat aman. Kode hanya berlaku satu kali.\n`], { type: 'text/plain' }))
+    a.href = URL.createObjectURL(new Blob([`Buat Masa Depan - kode pemulihan kata sandi\nUsername: ${username}\nKode: ${kode}\n\nSimpan di tempat aman. Kode hanya berlaku satu kali.\n`], { type: 'text/plain' }))
     a.download = 'kode-pemulihan.txt'; a.click()
   }
   return (
@@ -528,7 +528,7 @@ function Masuk({ t, lang, setLang, daftarAwal, onKembali }: { t: (s: string) => 
           <button className="btn-p w-full !py-2.5" disabled={busy} onClick={kirim}>{daftar ? t('Daftar') : t('Masuk')}</button>
           <button className="w-full text-sm text-blue-600" onClick={() => { setDaftar(!daftar); setErr(''); setInfo('') }}>{daftar ? t('Sudah punya akun? Masuk') : t('Belum punya akun? Daftar')}</button>
           </>}
-          <p className="pt-4 text-center text-xs text-slate-500">Portfolio Tracker™ · {KREDIT}</p>
+          <p className="pt-4 text-center text-xs text-slate-500">Buat Masa Depan™ · {KREDIT}</p>
         </div>
       </div>
     </div>
@@ -752,14 +752,14 @@ export default function Home() {
     <div className="mx-auto max-w-7xl px-4 pb-20">
       <header ref={headerRef} className="sticky top-0 z-10 -mx-4 border-b border-slate-200 bg-stone-50/90 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <div><h1 className="text-lg font-semibold leading-tight">{t('Portfolio Tracker')}<sup className="text-[10px]">™</sup></h1><p className="text-[11px] leading-tight text-slate-500">{KREDIT}</p></div>
+          <div><h1 className="text-lg font-semibold leading-tight">Buat Masa Depan<sup className="text-[10px]">™</sup></h1><p className="text-[11px] leading-tight text-slate-500">{KREDIT}</p></div>
           <div className="flex flex-wrap items-center gap-2">
             <select className="!w-auto" value={lang} onChange={e => pilihBahasa(e.target.value as Lang)} aria-label="Language"><option value="id">{t('Indonesia')}</option><option value="en">{t('English')}</option></select>
             <label className="flex items-center gap-1 text-sm text-slate-500"><span className="hidden sm:inline">{t('Mata uang')}</span><select className="!w-auto" value={mataTampil} onChange={e => pilihMata(e.target.value)} aria-label={t('Mata uang tampilan')} title={t('Mata uang tampilan')}>{MATA.map(m => <option key={m[0]} value={m[0]}>{m[0]}</option>)}</select></label>
             <button className="btn" onClick={() => { setHide(!hide); localStorage.setItem('pt-hide', hide ? '0' : '1') }}>{hide ? t('Tampilkan nominal') : t('Sembunyikan nominal')}</button>
             <select className="!w-auto" value={every} onChange={e => setEvery(Number(e.target.value))} aria-label="Auto-refresh"><option value={0}>{t('Auto-refresh mati')}</option><option value={1}>{t('Tiap 1 menit')}</option><option value={5}>{t('Tiap 5 menit')}</option><option value={15}>{t('Tiap 15 menit')}</option></select>
             <button className="btn-p" onClick={refresh} disabled={load}>{load ? t('Memuat…') : t('Refresh sekarang')}</button>
-            {sb && namaDari(user?.email) && <span className="text-sm text-slate-500">@{namaDari(user.email)}</span>}
+            {sb && namaSapaan(user?.email) && <span className="text-sm text-slate-500">{t('Halo')}, {namaSapaan(user.email)}</span>}
             <TemaToggle t={t} />
             {sb && namaDari(user?.email) && <button className="btn" onClick={() => setKodeModal('tawar')}>{t('Kode pemulihan')}</button>}
             {sb && <button className="btn" onClick={() => { sb.auth.signOut(); setLayar('awal') }}>{t('Keluar')}</button>}
@@ -853,7 +853,7 @@ export default function Home() {
       {formTrx && (() => { const a = d[formTrx.k].find(x => x.id === formTrx.aid); return a ? <FormTrx k={formTrx.k} a={a} awal={formTrx.tid ? daftarTrx(formTrx.k, a).find(x => x.id === formTrx.tid) : undefined} t={t} onSave={simpanTrx} onClose={() => setFormTrx(null)} /> : null })()}
       {form && <Form t={t} k={form.k} awal={form.id ? d[form.k].find(a => a.id === form.id) : undefined} onSave={simpanAset} onClose={() => setForm(null)} />}
       <Ticker saham={sahamTick} us={usTick} mata={mataTick} t={t} />
-      <footer className="mt-10 text-center text-xs text-slate-500">{t('Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.')}<p className="mt-2 font-medium">Portfolio Tracker™ · {KREDIT} · © {new Date().getFullYear()} Dani</p></footer>
+      <footer className="mt-10 text-center text-xs text-slate-500">{t('Harga bukan saran investasi dan bisa tertunda. Saham ±10-15 menit, NAV reksadana hanya diperbarui harian.')}<p className="mt-2 font-medium">Buat Masa Depan™ · {KREDIT} · © {new Date().getFullYear()} Dani</p></footer>
     </div>
   )
 }
