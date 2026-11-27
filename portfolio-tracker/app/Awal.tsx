@@ -20,7 +20,7 @@ export function Logo({ besar }: { besar?: boolean }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <svg width={u} height={u} viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill={T.emas} /><rect x="6" y="15" width="4" height="7" rx="1.2" fill={T.bg} /><rect x="12" y="10.5" width="4" height="11.5" rx="1.2" fill={T.bg} /><rect x="18" y="6" width="4" height="16" rx="1.2" fill={T.bg} /></svg>
-      <span className={`font-bold tracking-tight ${besar ? 'text-xl' : 'text-lg'}`}>Portfolio Tracker<sup className="text-[10px] font-medium">™</sup></span>
+      <span className={`font-bold tracking-tight ${besar ? 'text-xl' : 'text-lg'}`}>Buat Masa Depan<sup className="text-[10px] font-medium">™</sup></span>
     </span>
   )
 }
@@ -107,7 +107,7 @@ export function Awal({ t, lang, setLang, onMasuk, onDaftar, lokal }: { t: (s: st
 
       <footer className="mx-auto max-w-6xl space-y-1 px-5 pb-10 text-center text-xs" style={{ color: T.redup }}>
         <p>{t('Harga bukan saran investasi dan bisa tertunda.')}</p>
-        <p className="font-medium">Portfolio Tracker™ · Created by Dani · © {new Date().getFullYear()} Dani</p>
+        <p className="font-medium">Buat Masa Depan™ · Created by Dani · © {new Date().getFullYear()} Dani</p>
       </footer>
     </div>
   )
