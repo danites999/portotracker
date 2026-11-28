@@ -16,6 +16,7 @@ import { TemaToggle } from './tema'
 import { PanelFitur, FiturId } from './PanelFitur'
 import { Analisis } from './Analisis'
 import { Perencanaan } from './Perencanaan'
+import { InputUang } from './InputUang'
 import { MATA, formatMata } from '@/lib/mata'
 import { KalkulatorForex } from './KalkulatorForex'
 import { Trx, punyaTrx, KUNCI, daftarTrx, ringkasTrx, terapkan } from '@/lib/transaksi'
@@ -43,6 +44,10 @@ const F: Record<Kelas, Fld[]> = {
   properti: [['nama', 'Nama properti', 'text'], ['jenis', 'Jenis', 'select', ['Tanah', 'Rumah', 'Apartemen', 'Ruko']], ['lokasi', 'Lokasi (opsional)', 'text'], ['hargaBeli', 'Harga beli (Rp)', 'number'], ['nilai', 'Estimasi nilai sekarang (Rp)', 'number'], ['tglNilai', 'Tanggal estimasi nilai', 'date'], ['tanggal', 'Tanggal beli', 'date']],
   deposito: [['bank', 'Bank', 'text'], ['pokok', 'Nominal pokok (Rp)', 'number'], ['bunga', 'Bunga per tahun (%)', 'number'], ['tanggal', 'Tanggal mulai', 'date'], ['tenor', 'Tenor (bulan)', 'number'], ['pajak', 'Pajak bunga (%)', 'number'], ['aro', 'Perpanjang otomatis (ARO)', 'select', ['Tidak', 'Ya']]],
 }
+
+// Kolom nominal (uang) memakai pemisah ribuan otomatis
+const UANG = new Set(['hargaBeli', 'navBeli', 'navTerbaru', 'kursBeli', 'hargaManual', 'nilai', 'pokok'])
+const kolomUang = (k: Kelas, key: string) => UANG.has(key) || (k === 'forex' && key === 'jumlah')
 
 // Field yang diatur lewat Riwayat pembelian (disembunyikan di form Ubah aset)
 const SEMBUNYI: Record<string, string[]> = { saham: ['jumlah', 'satuan', 'hargaBeli', 'tanggal'], ussaham: ['jumlah', 'hargaBeli', 'tanggal'], reksa: ['unit', 'navBeli', 'tanggal'], crypto: ['jumlah', 'hargaBeli', 'tanggal'], forex: ['jumlah', 'kursBeli', 'tanggal'], emas: ['gram', 'hargaBeli', 'tanggal'] }
@@ -151,6 +156,7 @@ function RingkasanAset({ k, a, r, cache, M, t, kurs, onTambahTrx, onUbahTrx, onH
 
 function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Kelas; awal?: any; onSave: (o: any) => void; onClose: () => void }) {
   const today = new Date().toISOString().slice(0, 10)
+  const lokalUang = t('id-ID').startsWith('id') ? 'id' : 'en'
   const [v, setV] = useState<Record<string, string>>(() => {
     const o: Record<string, string> = {}
     F[k].forEach(([key, , tp, opts]) => {
@@ -210,6 +216,7 @@ function Form({ k, awal, t, onSave, onClose }: { t: (s: string) => string; k: Ke
           {fields.map(([key, label, tp, opts]) => (
             <label key={key} className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(label)}</span>
               {tp === 'select' ? <select value={v[key]} onChange={e => ubah(key, e.target.value)}>{opts!.map(o => <option key={o} value={o}>{t(o)}</option>)}</select>
+                : kolomUang(k, key) ? <InputUang lokal={lokalUang} value={v[key]} onChange={x => ubah(key, x)} />
                 : <input type={tp === 'number' ? 'number' : tp === 'desimal' ? 'text' : tp} step="any" inputMode={tp === 'number' || tp === 'desimal' ? 'decimal' : undefined} placeholder={tp === 'desimal' ? '0.5' : undefined} list={key === 'coinId' ? 'coins' : k === 'ussaham' && key === 'kode' ? 'etf-us' : undefined} value={v[key]} onChange={e => ubah(key, tp === 'desimal' ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />}
             </label>
           ))}
@@ -258,7 +265,7 @@ function FormTrx({ k, a, awal, t, onSave, onClose }: { k: Kelas; a: any; awal?: 
           <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(qLabel)}</span>
             <span className="flex gap-2"><input type={desimal ? 'text' : 'number'} step="any" inputMode="decimal" placeholder={desimal ? '0.5' : undefined} value={jml} onChange={e => setJml(desimal ? e.target.value.replace(',', '.').replace(/[^0-9.]/g, '').replace(/^(\d*\.\d*)\..*$/, '$1') : e.target.value)} />
               {saham && <select className="!w-28" value={satuan} onChange={e => setSatuan(e.target.value)}><option value="Lot">{t('Lot')}</option><option value="Lembar">{t('Lembar')}</option></select>}</span></label>
-          <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(hLabel)}</span><input type="number" step="any" inputMode="decimal" value={hrg} onChange={e => setHrg(e.target.value)} /></label>
+          <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t(hLabel)}</span><InputUang lokal={t('id-ID').startsWith('id') ? 'id' : 'en'} value={hrg} onChange={setHrg} /></label>
         </div>
         {rt && <p className="mt-3 rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-800">{t('Setelah disimpan')}: <b>{labelJumlah(k, rt.jumlah, a, loc, t)}</b>, {t('harga rata-rata')} <b>{uang(rt.rata)}</b></p>}
         {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
@@ -309,7 +316,7 @@ function FormTerima({ k, a, awal, t, onSave, onClose }: { k: Kelas; a: any; awal
         <div className="space-y-3">
           <label className="block text-sm"><span className={lbl}>{t('Tanggal diterima')}</span><input type="date" max={today} value={tgl} onChange={e => setTgl(e.target.value)} /></label>
           <label className="block text-sm"><span className={lbl}>{t('Jenis penerimaan')}</span><select value={jenis} onChange={e => setJenis(e.target.value)}>{opsi.map(o => <option key={o} value={o}>{t(o)}</option>)}</select></label>
-          <label className="block text-sm"><span className={lbl}>{usd ? t('Jumlah diterima (USD, setelah pajak)') : t('Jumlah diterima (Rp, setelah pajak)')}</span><input type="number" step="any" inputMode="decimal" value={jml} onChange={e => setJml(e.target.value)} /></label>
+          <label className="block text-sm"><span className={lbl}>{usd ? t('Jumlah diterima (USD, setelah pajak)') : t('Jumlah diterima (Rp, setelah pajak)')}</span><InputUang lokal={t('id-ID').startsWith('id') ? 'id' : 'en'} value={jml} onChange={setJml} /></label>
         </div>
         {err && <p className="mt-3 text-sm text-red-600">{err}</p>}
         <div className="mt-5 flex justify-end gap-2"><button className="btn" onClick={onClose}>{t('Batal')}</button><button className="btn-p" onClick={kirim}>{t('Simpan')}</button></div>
