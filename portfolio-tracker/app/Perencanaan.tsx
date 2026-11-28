@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, Legend, ReferenceLine } from 'recharts'
 import { Kelas } from '@/lib/types'
 import { bacaAngka } from '@/lib/uang'
+import { InputUang } from './InputUang'
 import { TUJUAN, TINGKAT, ASUMSI, Tujuan, Sikap, KelasRencana, rencana, bulanMencapai } from '@/lib/rencana'
 
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
@@ -113,7 +114,7 @@ export function Perencanaan({ t, M, faktor = 1, kode = 'IDR', totalPorto, nama, 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="rc-target" className={lbl}>{t('Target dana')} ({kode})</label>
-            <input id="rc-target" inputMode="decimal" autoComplete="off" value={teksTarget} onChange={e => setTeksTarget(e.target.value)} placeholder={t('mis. 5 miliar atau 500jt')} aria-invalid={errTarget} />
+            <InputUang id="rc-target" tampil singkatan lokal={lokal} value={teksTarget} onChange={setTeksTarget} placeholder={t('mis. 5 miliar atau 500jt')} aria-invalid={errTarget} />
             {errTarget && <p className={salahTeks}>{t('Masukkan target dana yang valid, mis. 5 miliar atau 500jt')}</p>}
           </div>
           <div>
@@ -123,13 +124,13 @@ export function Perencanaan({ t, M, faktor = 1, kode = 'IDR', totalPorto, nama, 
           </div>
           <div>
             <label htmlFor="rc-awal" className={lbl}>{t('Dana awal yang sudah ada')} ({kode})</label>
-            <input id="rc-awal" inputMode="decimal" autoComplete="off" value={teksAwal} onChange={e => setTeksAwal(e.target.value)} placeholder="0" aria-invalid={errAwal} />
+            <InputUang id="rc-awal" tampil singkatan lokal={lokal} value={teksAwal} onChange={setTeksAwal} placeholder="0" aria-invalid={errAwal} />
             {errAwal && <p className={salahTeks}>{t('Jumlah tidak valid')}</p>}
             {totalPorto > 0 && <button type="button" className="mt-1 text-xs font-medium underline" onClick={() => setTeksAwal(String(kode === 'IDR' ? Math.round(totalPorto) : Math.round(totalPorto * faktor * 100) / 100))}>{t('Isi dari total portofolio saya')} ({M(totalPorto)})</button>}
           </div>
           <div>
             <label htmlFor="rc-setoran" className={lbl}>{t('Setoran per bulan')} ({kode})</label>
-            <input id="rc-setoran" inputMode="decimal" autoComplete="off" value={teksSetoran} onChange={e => setTeksSetoran(e.target.value)} placeholder={t('kosongkan untuk melihat yang dibutuhkan')} aria-invalid={errSetoran} />
+            <InputUang id="rc-setoran" tampil singkatan lokal={lokal} value={teksSetoran} onChange={setTeksSetoran} placeholder={t('kosongkan untuk melihat yang dibutuhkan')} aria-invalid={errSetoran} />
             {errSetoran && <p className={salahTeks}>{t('Jumlah tidak valid')}</p>}
           </div>
         </div>
