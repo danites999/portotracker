@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useState } from 'react'
 import { bacaAngka } from '@/lib/uang'
+import { InputUang } from './InputUang'
 import { MATA } from '@/lib/mata'
 
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
@@ -41,7 +42,7 @@ export function KalkulatorForex({ t }: { t: (s: string) => string }) {
         </div>
 
         <div className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_minmax(0,1fr)]">
-          <div><label htmlFor="fx-jumlah" className={label}>{t('Jumlah')}</label><input id="fx-jumlah" inputMode="decimal" autoComplete="off" value={jumlah} onChange={e => setJumlah(e.target.value)} aria-invalid={!isFinite(a)} /></div>
+          <div><label htmlFor="fx-jumlah" className={label}>{t('Jumlah')}</label><InputUang id="fx-jumlah" tampil lokal={lokal} value={jumlah} onChange={setJumlah} aria-invalid={!isFinite(a)} /></div>
           <div><label htmlFor="fx-dari" className={label}>{t('Dari')}</label><select id="fx-dari" value={dari} onChange={e => setDari(e.target.value)}>{MATA.map(opsi)}</select></div>
           <button type="button" className="btn h-[38px] justify-self-start" onClick={() => { setDari(ke); setKe(dari) }} aria-label={t('Tukar posisi')} title={t('Tukar posisi')}>⇄</button>
           <div><label htmlFor="fx-ke" className={label}>{t('Ke')}</label><select id="fx-ke" value={ke} onChange={e => setKe(e.target.value)}>{MATA.map(opsi)}</select></div>
