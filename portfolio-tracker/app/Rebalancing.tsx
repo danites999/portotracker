@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Kelas } from '@/lib/types'
 import { Mode, hitungRebalance, samakanDenganSekarang } from '@/lib/rebalance'
+import { InputUang } from './InputUang'
 
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 const ILIKUID: Kelas[] = ['properti', 'deposito']
@@ -31,7 +32,7 @@ export function Rebalancing({ t, M, faktor = 1, kode = 'IDR', nilai, target, nam
         </div>
         <div className="flex flex-wrap items-end gap-4">
           {mode === 'dana'
-            ? <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Dana baru yang akan ditambahkan (Rp)').replace('(Rp)', `(${kode})`)}</span><input className="!w-56" type="number" inputMode="decimal" min="0" value={dana} onChange={e => setDana(e.target.value)} /></label>
+            ? <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Dana baru yang akan ditambahkan (Rp)').replace('(Rp)', `(${kode})`)}</span><InputUang className="!w-56" lokal={t('id-ID').startsWith('id') ? 'id' : 'en'} value={dana} onChange={setDana} /></label>
             : <label className="block text-sm"><span className="mb-1 block text-slate-600 dark:text-slate-400">{t('Toleransi selisih (poin persen)')}</span><input className="!w-32" type="number" inputMode="decimal" min="0" step="0.5" value={tol} onChange={e => setTol(e.target.value)} /></label>}
           <button className="btn" onClick={() => onSemua(samakanDenganSekarang(nilai))}>{t('Samakan dengan porsi sekarang')}</button>
           <button className="btn" onClick={() => onSemua({})}>{t('Kosongkan target')}</button>
