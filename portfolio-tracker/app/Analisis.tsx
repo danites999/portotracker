@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Kelas } from '@/lib/types'
 import { PROFIL_TARGET, Profil, alokasiDana, catatanPorto } from '@/lib/analisis'
 import { bacaAngka } from '@/lib/uang'
+import { InputUang } from './InputUang'
 
 const card = 'rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900'
 const CEPAT = [1, 5, 10, 50, 100] // juta rupiah
@@ -61,7 +62,7 @@ export function Analisis({ t, M, faktor = 1, kode = 'IDR', nilai, aset, target, 
 
         <div>
           <label htmlFor="dana-alokasi" className="mb-1 block text-sm font-medium">{t('Dana yang akan dialokasikan')} ({kode})</label>
-          <input id="dana-alokasi" inputMode="decimal" autoComplete="off" value={teks} onChange={e => setTeks(e.target.value)} placeholder={t('mis. 10jt atau 10.000.000')} aria-invalid={!danaOk && teks.trim() !== ''} className="sm:max-w-xs" />
+          <InputUang id="dana-alokasi" tampil singkatan lokal={lokal} value={teks} onChange={setTeks} placeholder={t('mis. 10jt atau 10.000.000')} aria-invalid={!danaOk && teks.trim() !== ''} className="sm:max-w-xs" />
           <div className="mt-2 flex flex-wrap gap-1.5">
             {cepat.map(([v, l]) => <button key={v} type="button" className="btn" onClick={() => setTeks(v)}>{l}</button>)}
           </div>
